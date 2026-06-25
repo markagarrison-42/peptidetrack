@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PeptideTrack — Your Invitation</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080f1a;
+      --surface: #0d1826;
+      --border: #1a2d42;
+      --text: #e8f4f8;
+      --muted: #5a8099;
+      --accent: #00d4c8;
+      --green: #00e676;
+      --mono: "Courier New", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 24px 60px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .logo {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .app-name {
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .headline {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    .subline {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    /* CTA */
+    .cta-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .cta-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .cta-url {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 20px;
+      word-break: break-all;
+    }
+    .cta-btn {
+      display: inline-block;
+      background: var(--accent);
+      color: #080f1a;
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 700;
+      padding: 16px 32px;
+      border-radius: 10px;
+      text-decoration: none;
+      letter-spacing: 0.01em;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 32px;
+    }
+    .section-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Steps */
+    .step {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      align-items: flex-start;
+    }
+    .step-num {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(0,212,200,0.1);
+      border: 1px solid rgba(0,212,200,0.2);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-content {}
+    .step-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .step-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* Platform cards */
+    .platform-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 480px) {
+      .platform-grid { grid-template-columns: 1fr; }
+    }
+    .platform-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .platform-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .platform-steps {
+      list-style: none;
+      counter-reset: steps;
+    }
+    .platform-steps li {
+      counter-increment: steps;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      padding-left: 20px;
+      position: relative;
+      line-height: 1.4;
+    }
+    .platform-steps li:last-child { border-bottom: none; }
+    .platform-steps li::before {
+      content: counter(steps);
+      position: absolute;
+      left: 0;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .platform-steps li strong { color: var(--text); }
+
+    /* Feature list */
+    .feature {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .feature-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .feature-text {}
+    .feature-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .feature-desc {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">💉</div>
+    <div class="app-name">PeptideTrack</div>
+    <h1 class="headline">You've been invited</h1>
+    <p class="subline">Track your peptide protocol, log doses, and monitor your progress — all from your phone.</p>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-block">
+    <div class="cta-label">Open the app at</div>
+    <div class="cta-url">protocol.mg42health.com</div>
+    <a href="https://protocol.mg42health.com" class="cta-btn">Open PeptideTrack →</a>
+  </div>
+
+  <!-- Getting started -->
+  <div class="section">
+    <div class="section-title">Getting started</div>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Open the app</div>
+        <div class="step-desc">Go to <strong style="color:var(--accent)">protocol.mg42health.com</strong> in your browser. Works on iPhone and Android.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Create your account</div>
+        <div class="step-desc">Tap <strong style="color:var(--text)">Register</strong>, enter your name, choose a username and password. No invite code needed.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Complete your profile</div>
+        <div class="step-desc">A quick 4-step setup will ask for your name, date of birth, height, starting weight, and goals.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Set up your protocol</div>
+        <div class="step-desc">Tap <strong style="color:var(--text)">Protocol</strong>, create your protocol, and add your compounds with dose and frequency. The app calculates your syringe units automatically.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <div class="step-title">Log your doses daily</div>
+        <div class="step-desc">The <strong style="color:var(--text)">Today</strong> tab shows everything due. Tap the circle next to each compound to log it as taken.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- What's in the app -->
+  <div class="section">
+    <div class="section-title">What's in the app</div>
+    <div class="feature">
+      <div class="feature-icon">📅</div>
+      <div class="feature-text">
+        <div class="feature-title">Today</div>
+        <div class="feature-desc">Your daily dose checklist. See what's due, confirm each dose, and track your completion rate.</div>
+      </div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📋</div>
+      <div class="feature-text">
+        <div class="feature-title">Protocol</div>
+        <div class="feature-desc">Manage your compounds, doses, and frequency. Built-in syringe guide shows exactly how many units to draw.</div>
+      </div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📈</div>
+      <div class="feature-text">
+        <div class="feature-title">Progress</div>
+        <div class="feature-desc">Log weight and body measurements, upload progress photos (front, side, back), and compare before/after side by side.</div>
+      </div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🧮</div>
+      <div class="feature-text">
+        <div class="feature-title">Calc</div>
+        <div class="feature-desc">Reconstitution calculator. Enter your vial size and bac water amount to get the exact units to draw for any dose.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add to home screen -->
+  <div class="section">
+    <div class="section-title">Add to your home screen</div>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px">PeptideTrack works like a native app when added to your home screen. No App Store download needed.</p>
+    <div class="platform-grid">
+      <div class="platform-card">
+        <div class="platform-label">🍎 iPhone (Safari)</div>
+        <ol class="platform-steps">
+          <li>Open <strong>protocol.mg42health.com</strong> in Safari</li>
+          <li>Tap the <strong>Share button</strong> (box with arrow) at the bottom</li>
+          <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+          <li>Tap <strong>Add</strong> in the top right</li>
+          <li>Open from your home screen like any app</li>
+        </ol>
+      </div>
+      <div class="platform-card">
+        <div class="platform-label">🤖 Android (Chrome)</div>
+        <ol class="platform-steps">
+          <li>Open <strong>protocol.mg42health.com</strong> in Chrome</li>
+          <li>Tap the <strong>three dots menu</strong> (⋮) top right</li>
+          <li>Tap <strong>Add to Home screen</strong></li>
+          <li>Tap <strong>Add</strong> to confirm</li>
+          <li>Open from your home screen like any app</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="section">
+    <div class="section-title">Tips</div>
+    <div class="step">
+      <div class="step-num">💡</div>
+      <div class="step-content">
+        <div class="step-title">Allow notifications</div>
+        <div class="step-desc">When prompted, allow notifications so the app can remind you when it's time to take your dose.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">💡</div>
+      <div class="step-content">
+        <div class="step-title">Use the Calc tab first</div>
+        <div class="step-desc">Before adding a compound to your protocol, use the Calc tab to verify your syringe units based on your vial reconstitution.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">💡</div>
+      <div class="step-content">
+        <div class="step-title">Log doses in real time</div>
+        <div class="step-desc">Tap to confirm each dose right after you take it. Your completion rate resets each day.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    PeptideTrack &nbsp;·&nbsp; protocol.mg42health.com<br>
+    Your data is private and stored securely.
+  </div>
+
+</div>
+</body>
+</html>
