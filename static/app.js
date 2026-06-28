@@ -187,6 +187,7 @@ async function bootApp() {
     : S.user;
   document.getElementById('topbar-name').textContent = displayName;
 
+  loadPeptideDosageData();
   loadToday();
 
   if (profile && !profile.onboarding_complete) {
@@ -1122,6 +1123,15 @@ async function changePassword() {
    LEARN TAB
 ══════════════════════════════════════════ */
 const PEPTIDE_CACHE = {};
+let PEPTIDE_DOSAGE_DATA = {};  // loaded from static JSON
+
+async function loadPeptideDosageData() {
+  try {
+    const resp = await fetch('/static/peptide_data.json');
+    const arr  = await resp.json();
+    arr.forEach(function(p) { PEPTIDE_DOSAGE_DATA[p.name.toLowerCase()] = p; });
+  } catch (e) { console.warn('Could not load peptide_data.json', e); }
+}
 
 function loadLearn() {
   const el = document.getElementById('page-learn');
@@ -1228,18 +1238,50 @@ async function openPeptideCard(peptideName) {
   // Check cache
   if (PEPTIDE_CACHE[peptideName]) {
     renderPeptideCard(container, peptideName, PEPTIDE_CACHE[peptideName]);
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
     return;
   }
 
-  container.innerHTML = '<div class="peptide-card-loading"><div class="peptide-card-spinner"></div><div style="color:var(--muted);font-size:13px;margin-top:12px">Loading ' + peptideName + '…</div></div>';
-  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Check static dosage data first — show immediately
+  const staticData = PEPTIDE_DOSAGE_DATA[peptideName.toLowerCase()];
+  if (staticData) {
+    const quickInfo = {
+      dosing:    staticData.dosage,
+      frequency: staticData.frequency,
+      route:     staticData.route,
+      notes:     staticData.notes,
+      mechanism: 'Loading additional details…',
+      uses:      [],
+      halfLife:  '—',
+      sideEffects: [],
+      stacks:    [],
+    };
+    renderPeptideCard(container, peptideName, quickInfo);
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    container.innerHTML = '<div class="peptide-card-loading"><div class="peptide-card-spinner"></div><div style="color:var(--muted);font-size:13px;margin-top:12px">Loading ' + peptideName + '…</div></div>';
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
+  // Fetch AI enrichment (mechanism, uses, stacks, side effects)
   try {
     const info = await POST('/api/learn/peptide', { name: peptideName });
+    // Merge: prefer static dosage data over AI for dosing fields
+    if (staticData) {
+      info.dosing    = staticData.dosage    || info.dosing;
+      info.frequency = staticData.frequency || info.frequency;
+      info.route     = staticData.route     || info.route;
+      if (staticData.notes) {
+        info.reconstitution = staticData.notes;
+      }
+    }
     PEPTIDE_CACHE[peptideName] = info;
     renderPeptideCard(container, peptideName, info);
   } catch (err) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div>Could not load data for ' + peptideName + '.<br><small>' + err.message + '</small></div>';
+    if (!staticData) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div>Could not load data for ' + peptideName + '.<br><small>' + err.message + '</small></div>';
+    }
+    // If we already showed static data, leave it up even if AI call failed
   }
 }
 
