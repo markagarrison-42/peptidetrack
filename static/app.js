@@ -243,6 +243,10 @@ function showDoseModal(itemId, compoundName, defaultDose, doseUnit, isUnschedule
 
 function closeDoseModal() {
   document.getElementById('dose-modal').classList.remove('open');
+  const btn = document.getElementById('dose-modal-confirm');
+  if (btn) { btn.disabled = false; btn.textContent = 'Log dose'; }
+  const flash = document.getElementById('dose-modal-flash');
+  if (flash) flash.textContent = '';
 }
 
 async function confirmDoseModal() {

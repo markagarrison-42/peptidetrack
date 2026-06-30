@@ -21,10 +21,9 @@ def create_app():
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_recycle": 280,
-        "pool_pre_ping": True,
-        "connect_args": {"ssl": {"ssl_disabled": True}},
-    }
+    "pool_recycle": 280,
+    "pool_pre_ping": True,
+}
 
     # Mail
     app.config["MAIL_SERVER"]         = "smtp.gmail.com"
@@ -83,5 +82,8 @@ def create_app():
 
 application = create_app()
 
-if __name__ == "__main__":
-    application.run(debug=True)
+from flask import render_template
+
+@application.route('/moved')
+def moved():
+    return render_template('moved.html')
