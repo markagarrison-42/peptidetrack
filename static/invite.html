@@ -4,18 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PeptideTrack — Your Invitation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #080f1a;
-      --surface: #0d1826;
-      --border: #1a2d42;
-      --text: #e8f4f8;
-      --muted: #5a8099;
-      --accent: #00d4c8;
-      --green: #00e676;
-      --mono: "Courier New", monospace;
-      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --bg:       #07040f;
+      --surface:  #0e0a1c;
+      --surface2: #13102a;
+      --border:   #1e1a36;
+      --border2:  #2d2850;
+      --text:     #f0eeff;
+      --muted:    #9988cc;
+      --accent:   #00e5d4;
+      --accent2:  #7c5fe6;
+      --amber:    #ffb300;
+      --green:    #00e676;
+      --grad:     linear-gradient(135deg, #00e5d4, #7c5fe6);
+      --mono:     "Courier New", monospace;
+      --sans:     'Space Grotesk', -apple-system, sans-serif;
     }
     body {
       background: var(--bg);
@@ -23,114 +31,170 @@
       font-family: var(--sans);
       font-size: 16px;
       line-height: 1.6;
-      padding: 0;
-      margin: 0;
       -webkit-font-smoothing: antialiased;
     }
+
+    /* Ambient glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 320px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(124,95,230,0.15) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
     .wrapper {
       max-width: 600px;
       margin: 0 auto;
-      padding: 40px 24px 60px;
+      padding: 48px 24px 72px;
+      position: relative;
+      z-index: 1;
     }
 
-    /* Header */
+    /* ── HEADER ── */
     .header {
       text-align: center;
       margin-bottom: 40px;
     }
-    .logo {
-      font-size: 48px;
-      margin-bottom: 16px;
+
+    .logo-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      background: var(--grad);
+      margin-bottom: 20px;
+      font-size: 1.8rem;
     }
+
     .app-name {
-      font-family: var(--mono);
       font-size: 13px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 12px;
-    }
-    .headline {
-      font-size: 30px;
       font-weight: 700;
-      letter-spacing: -0.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       margin-bottom: 12px;
     }
+
+    .headline {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      margin-bottom: 12px;
+    }
+
     .subline {
-      font-size: 16px;
+      font-size: 15px;
       color: var(--muted);
       max-width: 420px;
       margin: 0 auto;
     }
 
-    /* CTA */
+    /* ── WARNING ── */
+    .warning-bar {
+      background: rgba(255,179,0,0.08);
+      border: 1px solid rgba(255,179,0,0.25);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--amber);
+      text-align: center;
+      letter-spacing: 0.04em;
+      margin-bottom: 28px;
+    }
+
+    /* ── CTA ── */
     .cta-block {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 24px;
+      background: linear-gradient(160deg, #13102a, #0e0a1c);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 32px 28px;
       text-align: center;
       margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
     }
+
+    .cta-block::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,229,212,0.5), rgba(124,95,230,0.5), transparent);
+    }
+
     .cta-label {
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
+
     .cta-url {
       font-family: var(--mono);
       font-size: 18px;
       font-weight: 700;
       color: var(--accent);
-      margin-bottom: 20px;
-      word-break: break-all;
-    }
-    .cta-btn {
-      display: inline-block;
-      background: var(--accent);
-      color: #080f1a;
-      font-family: var(--sans);
-      font-size: 16px;
-      font-weight: 700;
-      padding: 16px 32px;
-      border-radius: 10px;
-      text-decoration: none;
-      letter-spacing: 0.01em;
+      margin-bottom: 24px;
     }
 
-    /* Section */
-    .section {
-      margin-bottom: 32px;
+    .cta-btn {
+      display: inline-block;
+      background: var(--grad);
+      color: #07040f;
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 700;
+      padding: 16px 36px;
+      border-radius: 12px;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: opacity 0.15s;
     }
+
+    .cta-btn:hover { opacity: 0.88; }
+
+    /* ── SECTIONS ── */
+    .section {
+      margin-bottom: 36px;
+    }
+
     .section-title {
-      font-family: var(--mono);
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--accent);
-      margin-bottom: 16px;
-      padding-bottom: 8px;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
       border-bottom: 1px solid var(--border);
     }
 
-    /* Steps */
+    /* ── STEPS ── */
     .step {
       display: flex;
       gap: 16px;
       margin-bottom: 20px;
       align-items: flex-start;
     }
+
     .step-num {
       font-family: var(--mono);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--accent);
-      background: rgba(0,212,200,0.1);
-      border: 1px solid rgba(0,212,200,0.2);
+      background: rgba(0,229,212,0.08);
+      border: 1px solid rgba(0,229,212,0.2);
       border-radius: 50%;
       width: 32px;
       height: 32px;
@@ -138,61 +202,81 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      margin-top: 1px;
+      margin-top: 2px;
     }
-    .step-content {}
+
     .step-title {
       font-size: 15px;
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 4px;
+      color: var(--text);
     }
+
     .step-desc {
       font-size: 14px;
       color: var(--muted);
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
-    /* Platform cards */
+    .step-desc strong { color: var(--text); font-weight: 600; }
+
+    /* ── PLATFORM GRID ── */
     .platform-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
     }
+
     @media (max-width: 480px) {
       .platform-grid { grid-template-columns: 1fr; }
     }
+
     .platform-card {
-      background: var(--surface);
+      background: linear-gradient(160deg, #13102a, #0e0a1c);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 18px;
+      border-radius: 16px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
     }
+
+    .platform-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(124,95,230,0.3), transparent);
+    }
+
     .platform-label {
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .platform-steps {
       list-style: none;
       counter-reset: steps;
     }
+
     .platform-steps li {
       counter-increment: steps;
       font-size: 13px;
       color: var(--muted);
-      padding: 6px 0;
+      padding: 7px 0 7px 22px;
       border-bottom: 1px solid var(--border);
-      padding-left: 20px;
       position: relative;
-      line-height: 1.4;
+      line-height: 1.5;
     }
+
     .platform-steps li:last-child { border-bottom: none; }
+
     .platform-steps li::before {
       content: counter(steps);
       position: absolute;
@@ -201,33 +285,43 @@
       font-size: 11px;
       color: var(--accent);
       font-weight: 700;
+      top: 9px;
     }
-    .platform-steps li strong { color: var(--text); }
 
-    /* Feature list */
+    .platform-steps li strong { color: var(--text); font-weight: 600; }
+
+    /* ── FEATURES ── */
     .feature {
       display: flex;
-      gap: 12px;
-      margin-bottom: 14px;
+      gap: 16px;
+      margin-bottom: 16px;
       align-items: flex-start;
+      background: linear-gradient(160deg, #13102a, #0e0a1c);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
     }
+
     .feature-icon {
-      font-size: 20px;
+      font-size: 22px;
       flex-shrink: 0;
       margin-top: 1px;
     }
-    .feature-text {}
+
     .feature-title {
       font-size: 15px;
-      font-weight: 600;
-      margin-bottom: 2px;
+      font-weight: 700;
+      margin-bottom: 3px;
+      color: var(--text);
     }
+
     .feature-desc {
       font-size: 13px;
       color: var(--muted);
+      line-height: 1.5;
     }
 
-    /* Footer */
+    /* ── FOOTER ── */
     .footer {
       text-align: center;
       font-size: 12px;
@@ -235,6 +329,12 @@
       margin-top: 48px;
       padding-top: 24px;
       border-top: 1px solid var(--border);
+      line-height: 1.8;
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
     }
   </style>
 </head>
@@ -243,17 +343,20 @@
 
   <!-- Header -->
   <div class="header">
-    <div class="logo">💉</div>
+    <div class="logo-mark">💉</div>
     <div class="app-name">PeptideTrack</div>
     <h1 class="headline">You've been invited</h1>
     <p class="subline">Track your peptide protocol, log doses, and monitor your progress — all from your phone.</p>
   </div>
 
+  <!-- Warning -->
+  <div class="warning-bar">⚠️ For Research Use Only ⚠️</div>
+
   <!-- CTA -->
   <div class="cta-block">
     <div class="cta-label">Open the app at</div>
-    <div class="cta-url">protocol.mg42health.com</div>
-    <a href="https://protocol.mg42health.com" class="cta-btn">Open PeptideTrack →</a>
+    <div class="cta-url">protocol.mg42apps.com</div>
+    <a href="https://protocol.mg42apps.com" class="cta-btn">Open PeptideTrack →</a>
   </div>
 
   <!-- Getting started -->
@@ -263,14 +366,14 @@
       <div class="step-num">1</div>
       <div class="step-content">
         <div class="step-title">Open the app</div>
-        <div class="step-desc">Go to <strong style="color:var(--accent)">protocol.mg42health.com</strong> in your browser. Works on iPhone and Android.</div>
+        <div class="step-desc">Go to <strong>protocol.mg42apps.com</strong> in your browser. Works on iPhone and Android.</div>
       </div>
     </div>
     <div class="step">
       <div class="step-num">2</div>
       <div class="step-content">
         <div class="step-title">Create your account</div>
-        <div class="step-desc">Tap <strong style="color:var(--text)">Register</strong>, enter your name, choose a username and password. No invite code needed.</div>
+        <div class="step-desc">Tap <strong>Register</strong>, enter your name, choose a username and password. No invite code needed.</div>
       </div>
     </div>
     <div class="step">
@@ -284,14 +387,14 @@
       <div class="step-num">4</div>
       <div class="step-content">
         <div class="step-title">Set up your protocol</div>
-        <div class="step-desc">Tap <strong style="color:var(--text)">Protocol</strong>, create your protocol, and add your compounds with dose and frequency. The app calculates your syringe units automatically.</div>
+        <div class="step-desc">Tap <strong>Protocol</strong>, create your protocol, and add your compounds with dose and frequency. The app calculates your syringe units automatically.</div>
       </div>
     </div>
     <div class="step">
       <div class="step-num">5</div>
       <div class="step-content">
         <div class="step-title">Log your doses daily</div>
-        <div class="step-desc">The <strong style="color:var(--text)">Today</strong> tab shows everything due. Tap the circle next to each compound to log it as taken.</div>
+        <div class="step-desc">The <strong>Today</strong> tab shows everything due. Tap the + circle next to each compound to log it as taken.</div>
       </div>
     </div>
   </div>
@@ -321,6 +424,13 @@
       </div>
     </div>
     <div class="feature">
+      <div class="feature-icon">🧬</div>
+      <div class="feature-text">
+        <div class="feature-title">Learn</div>
+        <div class="feature-desc">110-peptide library with AI-generated reference cards, live research feed, and reconstitution video guides.</div>
+      </div>
+    </div>
+    <div class="feature">
       <div class="feature-icon">🧮</div>
       <div class="feature-text">
         <div class="feature-title">Calc</div>
@@ -332,12 +442,12 @@
   <!-- Add to home screen -->
   <div class="section">
     <div class="section-title">Add to your home screen</div>
-    <p style="font-size:14px;color:var(--muted);margin-bottom:16px">PeptideTrack works like a native app when added to your home screen. No App Store download needed.</p>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:18px">PeptideTrack works like a native app when added to your home screen. No App Store download needed.</p>
     <div class="platform-grid">
       <div class="platform-card">
         <div class="platform-label">🍎 iPhone (Safari)</div>
         <ol class="platform-steps">
-          <li>Open <strong>protocol.mg42health.com</strong> in Safari</li>
+          <li>Open <strong>protocol.mg42apps.com</strong> in Safari</li>
           <li>Tap the <strong>Share button</strong> (box with arrow) at the bottom</li>
           <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
           <li>Tap <strong>Add</strong> in the top right</li>
@@ -347,7 +457,7 @@
       <div class="platform-card">
         <div class="platform-label">🤖 Android (Chrome)</div>
         <ol class="platform-steps">
-          <li>Open <strong>protocol.mg42health.com</strong> in Chrome</li>
+          <li>Open <strong>protocol.mg42apps.com</strong> in Chrome</li>
           <li>Tap the <strong>three dots menu</strong> (⋮) top right</li>
           <li>Tap <strong>Add to Home screen</strong></li>
           <li>Tap <strong>Add</strong> to confirm</li>
@@ -384,8 +494,8 @@
   </div>
 
   <div class="footer">
-    PeptideTrack &nbsp;·&nbsp; protocol.mg42health.com<br>
-    Your data is private and stored securely.
+    PeptideTrack &nbsp;·&nbsp; <a href="https://protocol.mg42apps.com">protocol.mg42apps.com</a><br>
+    For research use only. Your data is private and stored securely.
   </div>
 
 </div>

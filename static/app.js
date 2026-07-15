@@ -292,7 +292,17 @@ async function confirmDoseModal() {
 ══════════════════════════════════════════ */
 async function loadToday() {
   const el = document.getElementById('page-today');
-  el.innerHTML = '<div class="empty-state">Loading...</div>';
+  HISTORY_OFFSET = 0;
+  el.innerHTML = '<div class="today-tabs">'
+    + '<button class="today-tab active" id="today-tab-log" onclick="switchTodayTab(&quot;log&quot;, this)">Today</button>'
+    + '<button class="today-tab" id="today-tab-history" onclick="switchTodayTab(&quot;history&quot;, this)">History</button>'
+    + '</div>'
+    + '<div id="today-log-panel"><div class="empty-state">Loading...</div></div>'
+    + '<div id="today-history-panel" style="display:none"></div>';
+  loadTodayLog();
+}
+
+async function loadTodayLog() {
   try {
     const me        = await GET('/auth/me');
     S.userId        = me.id;
@@ -300,10 +310,119 @@ async function loadToday() {
     const todayData = await GET('/api/doses/today');
     const active    = protocols.filter(function(p) { return p.active; });
     S.protocols     = protocols;
-    renderToday(el, active, todayData.taken_item_ids || []);
+    const logPanel  = document.getElementById('today-log-panel');
+    if (logPanel) renderToday(logPanel, active, todayData.taken_item_ids || []);
   } catch (err) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div>' + err.message + '</div>';
+    const logPanel = document.getElementById('today-log-panel');
+    if (logPanel) logPanel.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div>' + err.message + '</div>';
   }
+}
+
+function switchTodayTab(name, btn) {
+  document.querySelectorAll('.today-tab').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('today-log-panel').style.display     = name === 'log'     ? 'block' : 'none';
+  document.getElementById('today-history-panel').style.display = name === 'history' ? 'block' : 'none';
+  if (name === 'history') loadHistory(0);
+}
+
+async function loadHistory(offset) {
+  HISTORY_OFFSET = offset || 0;
+  const panel = document.getElementById('today-history-panel');
+  if (!panel) return;
+  panel.innerHTML = '<div class="empty-state">Loading…</div>';
+  try {
+    const logs = await GET('/api/doses/history?days_offset=' + HISTORY_OFFSET + '&range=30');
+    renderHistory(panel, logs, HISTORY_OFFSET);
+  } catch (err) {
+    panel.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div>' + err.message + '</div>';
+  }
+}
+
+function renderHistory(panel, logs, offset) {
+  const rangeStart = offset + 1;
+  const rangeEnd   = offset + 30;
+  let html = '<div class="history-nav">';
+  html += '<button class="history-nav-btn" onclick="loadHistory(' + (offset + 30) + ')"' + (offset >= 60 ? ' disabled' : '') + '>← Older</button>';
+  html += '<span class="history-nav-label">Days ' + rangeStart + '–' + rangeEnd + ' ago</span>';
+  html += '<button class="history-nav-btn" onclick="loadHistory(' + Math.max(0, offset - 30) + ')"' + (offset === 0 ? ' disabled' : '') + '>Newer →</button>';
+  html += '</div>';
+
+  if (!logs.length) {
+    html += '<div class="empty-state"><div class="empty-state-icon">📋</div>No doses logged in this period.</div>';
+    panel.innerHTML = html;
+    return;
+  }
+
+  // Group by date
+  const byDate = {};
+  logs.forEach(function(log) {
+    if (!byDate[log.date]) byDate[log.date] = [];
+    byDate[log.date].push(log);
+  });
+
+  const dates = Object.keys(byDate).sort().reverse();
+  dates.forEach(function(d) {
+    const dayLogs = byDate[d];
+    const dateStr = new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    html += '<div class="history-date-group">';
+    html += '<div class="history-date-label">' + dateStr + '</div>';
+    dayLogs.forEach(function(log) {
+      const unit = log.compound_name ? '' : '';
+      html += '<div class="history-entry" data-log-id="' + log.id + '">';
+      html += '<div class="history-entry-info">';
+      html += '<div class="history-entry-name">' + (log.compound_name || 'Unknown') + '</div>';
+      html += '<div class="history-entry-dose">' + (log.dose_mg_taken || '—') + ' mg';
+      if (log.off_schedule) html += ' <span class="history-off-badge">off-schedule</span>';
+      html += '</div>';
+      if (log.notes) html += '<div class="history-entry-notes">' + log.notes + '</div>';
+      html += '</div>';
+      html += '<div class="history-entry-actions">';
+      html += '<button class="icon-btn" data-log-id="' + log.id + '" data-dose="' + (log.dose_mg_taken || 0) + '" data-notes="' + (log.notes || '').replace(/"/g, '&quot;') + '" onclick="showEditLog(this)">✏️</button>';
+      html += '<button class="icon-btn danger" onclick="deleteLog(' + log.id + ')">✕</button>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+  });
+
+  panel.innerHTML = html;
+}
+
+function showEditLog(btn) {
+  const logId        = btn.getAttribute('data-log-id');
+  const currentDose  = btn.getAttribute('data-dose');
+  const currentNotes = btn.getAttribute('data-notes') || '';
+  const modal = document.getElementById('edit-log-modal');
+  document.getElementById('el-log-id').value      = logId;
+  document.getElementById('el-dose').value        = currentDose;
+  document.getElementById('el-notes').value       = currentNotes;
+  document.getElementById('el-flash').textContent = '';
+  modal.classList.add('open');
+}
+
+function closeEditLog() {
+  const modal = document.getElementById('edit-log-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+async function saveEditLog() {
+  const logId = parseInt(document.getElementById('el-log-id').value);
+  const dose  = parseFloat(document.getElementById('el-dose').value);
+  const notes = document.getElementById('el-notes').value.trim();
+  if (isNaN(dose) || dose <= 0) { flash('el-flash', 'Enter a valid dose', true); return; }
+  try {
+    await PUT('/api/doses/logs/' + logId, { dose_mg_taken: dose, notes: notes || null });
+    closeEditLog();
+    loadHistory(HISTORY_OFFSET);
+  } catch (err) { flash('el-flash', err.message, true); }
+}
+
+async function deleteLog(logId) {
+  if (!confirm('Delete this dose log? This cannot be undone.')) return;
+  try {
+    await DEL('/api/doses/logs/' + logId);
+    loadHistory(HISTORY_OFFSET);
+  } catch (err) { alert(err.message); }
 }
 
 function renderToday(el, protocols, takenIds) {
@@ -327,9 +446,10 @@ function renderToday(el, protocols, takenIds) {
     if (!proto.items) return;
     proto.items.forEach(function(item) {
       if (!item.active) return;
-      if (item.frequency && item.frequency.match(/^[A-Z][a-z]{2}/)) {
+      const nonSpecific = ['Daily','Weekly','Twice daily','3x/week','Monthly','As needed'];
+      if (item.frequency && !nonSpecific.includes(item.frequency)) {
         const days = item.frequency.split(',').map(function(d) { return d.trim(); });
-        if (!days.includes(todayDay)) return;
+        if (days.length && /^[A-Z][a-z]{2}/.test(days[0]) && !days.includes(todayDay)) return;
       }
       allItems.push({ item: item, protoName: proto.name });
     });
@@ -701,18 +821,91 @@ async function addMyCompound(protocolId) {
   } catch (err) { flash('ac-flash-' + protocolId, err.message, true); }
 }
 
-async function editCompoundItem(itemId, patientId) {
-  const newDose   = prompt('New dose (mg):');
-  if (newDose === null) return;
-  const newTiming = prompt('Timing (or leave blank):');
-  if (newTiming === null) return;
+function editCompoundItem(itemId, patientId) {
+  let foundItem = null;
+  (S.protocols || []).forEach(function(proto) {
+    (proto.items || []).forEach(function(item) {
+      if (item.id === itemId) foundItem = item;
+    });
+  });
+  if (!foundItem) return;
+  const unit = (foundItem.notes && foundItem.notes.startsWith('unit:')) ? foundItem.notes.split(':')[1] : 'mg';
+  showEditCompoundModal(itemId, foundItem.compound_name, foundItem.dose_mg, unit, foundItem.frequency, foundItem.route, foundItem.timing);
+}
+
+function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timing) {
+  const modal = document.getElementById('edit-compound-modal');
+  document.getElementById('ecm-item-id').value    = itemId;
+  document.getElementById('ecm-name').textContent = name;
+  document.getElementById('ecm-dose').value       = dose;
+  document.getElementById('ecm-unit').textContent = unit;
+  document.getElementById('ecm-timing').value     = timing || '';
+  const freqSel = document.getElementById('ecm-frequency');
+  const isSpecific = frequency && !['Daily','Weekly','Twice daily','3x/week','Monthly','As needed'].includes(frequency);
+  if (freqSel) {
+    freqSel.value = isSpecific ? 'Specific days' : (frequency || 'Daily');
+  }
+  // Reset day buttons
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(d) {
+    const btn = document.getElementById('ecm-day-' + d);
+    if (btn) { btn.setAttribute('data-selected', 'false'); btn.classList.remove('day-btn-active'); }
+  });
+  // Pre-select days if specific days
+  if (isSpecific && frequency) {
+    frequency.split(',').map(function(d) { return d.trim(); }).forEach(function(d) {
+      const btn = document.getElementById('ecm-day-' + d);
+      if (btn) { btn.setAttribute('data-selected', 'true'); btn.classList.add('day-btn-active'); }
+    });
+  }
+  toggleEcmDayPicker(isSpecific ? 'Specific days' : (frequency || 'Daily'));
+  const routeSel = document.getElementById('ecm-route');
+  if (routeSel) routeSel.value = route || 'SubQ';
+  document.getElementById('ecm-flash').textContent = '';
+  modal.classList.add('open');
+}
+
+function closeEditCompoundModal() {
+  const modal = document.getElementById('edit-compound-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function toggleEcmDayPicker(val) {
+  const picker = document.getElementById('ecm-days');
+  if (picker) picker.style.display = val === 'Specific days' ? 'block' : 'none';
+}
+
+function toggleEcmDayBtn(btn, evt) {
+  if (evt) evt.stopPropagation();
+  const active = btn.getAttribute('data-selected') === 'true';
+  btn.setAttribute('data-selected', active ? 'false' : 'true');
+  btn.classList.toggle('day-btn-active', !active);
+}
+
+function getEcmSelectedDays() {
+  return ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].filter(function(d) {
+    const el = document.getElementById('ecm-day-' + d);
+    return el && el.getAttribute('data-selected') === 'true';
+  }).join(', ');
+}
+
+async function saveEditCompoundModal() {
+  const itemId  = parseInt(document.getElementById('ecm-item-id').value);
+  const dose    = parseFloat(document.getElementById('ecm-dose').value);
+  const timing  = document.getElementById('ecm-timing').value.trim();
+  const freqRaw = document.getElementById('ecm-frequency').value;
+  const freq    = freqRaw === 'Specific days' ? (getEcmSelectedDays() || 'Specific days') : freqRaw;
+  const route   = document.getElementById('ecm-route').value;
+  if (isNaN(dose) || dose <= 0) { flash('ecm-flash', 'Enter a valid dose', true); return; }
   try {
     await PUT('/api/protocols/items/' + itemId, {
-      dose_mg: parseFloat(newDose),
-      timing:  newTiming || null,
+      dose_mg:   dose,
+      timing:    timing || null,
+      frequency: freq,
+      route:     route,
     });
+    closeEditCompoundModal();
     loadProtocol();
-  } catch (err) { alert(err.message); }
+  } catch (err) { flash('ecm-flash', err.message, true); }
 }
 
 async function removeCompoundItem(itemId, patientId) {
@@ -723,15 +916,36 @@ async function removeCompoundItem(itemId, patientId) {
   } catch (err) { alert(err.message); }
 }
 
-async function editProtocolName(protocolId) {
-  const name  = prompt('Protocol name:', S.protocol ? S.protocol.name : '');
-  if (name === null) return;
-  const start = prompt('Start date (YYYY-MM-DD):', (S.protocol && S.protocol.start_date) ? S.protocol.start_date : today());
-  if (start === null) return;
+function editProtocolName(protocolId) {
+  const proto = (S.protocols || []).find(function(p) { return p.id === protocolId; });
+  if (!proto) return;
+  showEditProtocolModal(protocolId, proto.name, proto.start_date);
+}
+
+function showEditProtocolModal(protocolId, name, startDate) {
+  const modal = document.getElementById('edit-protocol-modal');
+  document.getElementById('epm-proto-id').value = protocolId;
+  document.getElementById('epm-name').value     = name || '';
+  document.getElementById('epm-start').value    = startDate || today();
+  document.getElementById('epm-flash').textContent = '';
+  modal.classList.add('open');
+}
+
+function closeEditProtocolModal() {
+  const modal = document.getElementById('edit-protocol-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+async function saveEditProtocolModal() {
+  const protocolId = parseInt(document.getElementById('epm-proto-id').value);
+  const name       = document.getElementById('epm-name').value.trim();
+  const start      = document.getElementById('epm-start').value;
+  if (!name) { flash('epm-flash', 'Enter a protocol name', true); return; }
   try {
-    await PUT('/api/protocols/' + protocolId, { name, start_date: start });
+    await PUT('/api/protocols/' + protocolId, { name: name, start_date: start });
+    closeEditProtocolModal();
     loadProtocol();
-  } catch (err) { alert(err.message); }
+  } catch (err) { flash('epm-flash', err.message, true); }
 }
 
 /* ══════════════════════════════════════════
@@ -764,21 +978,13 @@ function renderProgress(el, checkins, photos, patientId) {
 
   html += '<div class="inner-tabs">';
   html += '<button class="inner-tab active" onclick="switchProgressTab(\'body\', this)">Body</button>';
-  html += '<button class="inner-tab" onclick="switchProgressTab(\'photos\', this)">Photos</button>';
-  html += '<button class="inner-tab" onclick="switchProgressTab(\'compare\', this)">Before / After</button>';
   html += '</div>';
 
   html += '<div class="inner-panel active" id="prog-body">';
   html += renderBodyPanel(checkins, patientId);
   html += '</div>';
 
-  html += '<div class="inner-panel" id="prog-photos">';
-  html += renderPhotosPanel(photos, patientId);
-  html += '</div>';
 
-  html += '<div class="inner-panel" id="prog-compare">';
-  html += renderComparePanel(photos);
-  html += '</div>';
 
   el.innerHTML = html;
 
@@ -881,146 +1087,12 @@ async function logMeasurements(patientId) {
   } catch (err) { flash('ms-flash', err.message, true); }
 }
 
-function renderPhotosPanel(photos, patientId) {
-  const byDate = S.photos;
-  const dates  = Object.keys(byDate).sort().reverse();
-  let html = '<div style="padding-top:16px">';
 
-  if (!dates.length) {
-    html += '<div class="empty-state"><div class="empty-state-icon">📷</div>No photos yet.<br>Tap + to add your first progress photo.</div>';
-  } else {
-    dates.slice(0, 6).forEach(function(date) {
-      html += '<div class="photo-date-group">';
-      html += '<div class="photo-date-label">' + fmtDate(date) + '</div>';
-      html += '<div class="photo-angles">';
-      ['front', 'side', 'back'].forEach(function(angle) {
-        const ph = (byDate[date] || []).find(function(p) { return (p.angle || '').toLowerCase() === angle; });
-        html += '<div class="photo-slot">';
-        if (ph) {
-          html += '<img src="' + ph.cloudinary_url + '" loading="lazy">';
-          html += '<div class="photo-angle-label">' + angle + '</div>';
-          html += '<button class="share-btn" onclick="togglePhotoShare(' + ph.id + ')" title="Toggle sharing">' + (ph.shared_with_practitioner ? '👁' : '🔒') + '</button>';
-          html += '<button class="delete-btn" onclick="deleteProgressPhoto(' + ph.id + ')">✕</button>';
-        } else {
-          html += '<div class="photo-slot-empty" onclick="quickUploadPhoto(\'' + angle + '\', \'' + date + '\', ' + patientId + ')">';
-          html += '<span>+</span><span>' + angle + '</span>';
-          html += '</div>';
-        }
-        html += '</div>';
-      });
-      html += '</div></div>';
-    });
-  }
 
-  html += '<div style="padding:0 20px 20px">';
-  html += '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:0.08em;text-transform:uppercase">Add photos for a new date</div>';
-  html += '<input type="date" id="new-photo-date" value="' + today() + '" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--sans);font-size:15px;padding:12px 14px;margin-bottom:10px;-webkit-appearance:none;appearance:none">';
-  html += '<div class="photo-angles">';
-  ['front', 'side', 'back'].forEach(function(angle) {
-    html += '<div class="photo-slot" onclick="quickUploadPhotoFromNewDate(\'' + angle + '\', ' + patientId + ')">';
-    html += '<div class="photo-slot-empty"><span>+</span><span>' + angle + '</span></div>';
-    html += '</div>';
-  });
-  html += '</div></div>';
-  html += '</div>';
-  return html;
-}
 
-function quickUploadPhoto(angle, date, patientId) {
-  const input = document.getElementById('quick-photo-input');
-  input.onchange = async function() {
-    const file = input.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('patient_id', patientId);
-    formData.append('angle', angle);
-    formData.append('date', date);
-    try {
-      const res  = await fetch('/api/photos/upload', { method: 'POST', credentials: 'same-origin', body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
-      loadProgress();
-    } catch (err) { alert(err.message); }
-    input.value = '';
-  };
-  input.click();
-}
 
-function quickUploadPhotoFromNewDate(angle, patientId) {
-  const dateEl = document.getElementById('new-photo-date');
-  const date   = dateEl ? dateEl.value : today();
-  quickUploadPhoto(angle, date, patientId);
-}
 
-async function togglePhotoShare(photoId) {
-  try {
-    await POST('/api/photos/' + photoId + '/toggle-share', {});
-    loadProgress();
-  } catch (err) { alert(err.message); }
-}
 
-async function deleteProgressPhoto(photoId) {
-  if (!confirm('Delete this photo? This cannot be undone.')) return;
-  try {
-    await DEL('/api/photos/' + photoId);
-    loadProgress();
-  } catch (err) { alert(err.message); }
-}
-
-function renderComparePanel(photos) {
-  const byDate = S.photos;
-  const dates  = Object.keys(byDate).sort().reverse();
-
-  if (dates.length < 2) {
-    return '<div class="empty-state" style="padding-top:40px"><div class="empty-state-icon">📸</div>You need photos from at least two different dates to compare.</div>';
-  }
-
-  let html = '<div style="padding:20px 0 0">';
-  html += '<div class="compare-selects">';
-  html += '<div><div class="compare-col-label">Before</div>';
-  html += '<select id="cmp-a" onchange="renderComparison()" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:13px;padding:10px 12px;-webkit-appearance:none;appearance:none">';
-  dates.forEach(function(d, i) {
-    html += '<option value="' + d + '"' + (i === dates.length - 1 ? ' selected' : '') + '>' + fmtDateShort(d) + '</option>';
-  });
-  html += '</select></div>';
-  html += '<div><div class="compare-col-label">After</div>';
-  html += '<select id="cmp-b" onchange="renderComparison()" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:13px;padding:10px 12px;-webkit-appearance:none;appearance:none">';
-  dates.forEach(function(d, i) {
-    html += '<option value="' + d + '"' + (i === 0 ? ' selected' : '') + '>' + fmtDateShort(d) + '</option>';
-  });
-  html += '</select></div></div>';
-  html += '<div id="compare-result" class="compare-angles"></div>';
-  html += '</div>';
-  return html;
-}
-
-function renderComparison() {
-  const el    = document.getElementById('compare-result');
-  if (!el) return;
-  const dateA = document.getElementById('cmp-a') ? document.getElementById('cmp-a').value : null;
-  const dateB = document.getElementById('cmp-b') ? document.getElementById('cmp-b').value : null;
-  if (!dateA || !dateB) return;
-
-  const photosA = COMPARE_PHOTOS[dateA] || [];
-  const photosB = COMPARE_PHOTOS[dateB] || [];
-
-  let html = '';
-  ['front', 'side', 'back'].forEach(function(angle) {
-    const a = photosA.find(function(p) { return (p.angle || '').toLowerCase() === angle; });
-    const b = photosB.find(function(p) { return (p.angle || '').toLowerCase() === angle; });
-    if (!a && !b) return;
-    html += '<div class="compare-angle-row">';
-    html += '<div class="compare-angle-name">' + angle + '</div>';
-    html += '<div class="compare-pair">';
-    html += '<div class="compare-img">' + (a ? '<img src="' + a.cloudinary_url + '" loading="lazy">' : '<div class="compare-img-empty">—</div>') + '</div>';
-    html += '<div class="compare-img">' + (b ? '<img src="' + b.cloudinary_url + '" loading="lazy">' : '<div class="compare-img-empty">—</div>') + '</div>';
-    html += '</div></div>';
-  });
-
-  if (!html) html = '<div class="empty-state">No matching photos for these dates.</div>';
-  el.innerHTML = html;
-}
 
 /* ══════════════════════════════════════════
    PROFILE
@@ -1127,6 +1199,75 @@ async function changePassword() {
    LEARN TAB
 ══════════════════════════════════════════ */
 const PEPTIDE_CACHE = {};
+let HISTORY_OFFSET = 0;
+const PD_URLS = {
+  '5-amino-1mq': 'https://peptidedosages.com/single-peptide-dosages/5-amino-1mq-10-mg-vial-dosage-protocol/',
+  'adamax': 'https://peptidedosages.com/single-peptide-dosages/adamax-10-mg-vial-dosage-protocol/',
+  'adipotide': 'https://peptidedosages.com/single-peptide-dosages/adipotide-10-mg-vial-dosage-protocol/',
+  'aicar': 'https://peptidedosages.com/single-peptide-dosages/aicar-50-mg-vial-dosage-protocol/',
+  'aod-9604': 'https://peptidedosages.com/single-peptide-dosages/aod-9604-5-mg-vial-dosage-protocol/',
+  'ara-290': 'https://peptidedosages.com/single-peptide-dosages/ara-290-16-mg-vial-dosage-protocol/',
+  'bpc-157': 'https://peptidedosages.com/single-peptide-dosages/bpc-157-5-mg-vial-dosage-protocol/',
+  'cagrilintide': 'https://peptidedosages.com/single-peptide-dosages/cagrilintide-5-mg-vial-dosage-protocol/',
+  'cartalax': 'https://peptidedosages.com/single-peptide-dosages/cartalax-20-mg-vial-dosage-protocol/',
+  'cerebrolysin': 'https://peptidedosages.com/single-peptide-dosages/cerebrolysin-60-mg-vial-dosage-protocol/',
+  'chonluten': 'https://peptidedosages.com/single-peptide-dosages/chonluten-20-mg-vial-dosage-protocol/',
+  'cjc-1295': 'https://peptidedosages.com/single-peptide-dosages/cjc-1295-no-dac-5-mg-vial-dosage-protocol/',
+  'cjc-1295 dac': 'https://peptidedosages.com/single-peptide-dosages/cjc-1295-dac-2-mg-vial-dosage-protocol/',
+  'cortagen': 'https://peptidedosages.com/single-peptide-dosages/cortagen-20-mg-vial-dosage-protocol/',
+  'dsip': 'https://peptidedosages.com/single-peptide-dosages/dsip-5-mg-vial-dosage-protocol/',
+  'epitalon': 'https://peptidedosages.com/single-peptide-dosages/epitalon-epithalon-10-mg-vial-dosage-protocol/',
+  'epithalon': 'https://peptidedosages.com/single-peptide-dosages/epitalon-epithalon-10-mg-vial-dosage-protocol/',
+  'foxo4-dri': 'https://peptidedosages.com/single-peptide-dosages/foxo4-dri-10-mg-vial-dosage-protocol/',
+  'ghk-cu': 'https://peptidedosages.com/single-peptide-dosages/ghk-cu-50-mg-vial-dosage-protocol/',
+  'ghrp-2': 'https://peptidedosages.com/single-peptide-dosages/ghrp-2-5-mg-vial-dosage-protocol/',
+  'ghrp-6': 'https://peptidedosages.com/single-peptide-dosages/ghrp-6-5-mg-vial-dosage-protocol/',
+  'glutathione': 'https://peptidedosages.com/single-peptide-dosages/glutathione-600-mg-vial-dosage-protocol/',
+  'gonadorelin': 'https://peptidedosages.com/single-peptide-dosages/gonadorelin-2-mg-vial-dosage-protocol/',
+  'hcg': 'https://peptidedosages.com/single-peptide-dosages/hcg-5000-iu-vial-dosage-protocol/',
+  'hgh 191aa': 'https://peptidedosages.com/single-peptide-dosages/hgh-191aa-10-iu-vial-dosage-protocol/',
+  'hmg': 'https://peptidedosages.com/single-peptide-dosages/hmg-75-iu-vial-dosage-protocol/',
+  'igf-1 lr3': 'https://peptidedosages.com/single-peptide-dosages/igf-1-lr3-1-mg-vial-dosage-protocol/',
+  'ipamorelin': 'https://peptidedosages.com/single-peptide-dosages/ipamorelin-5-mg-vial-dosage-protocol/',
+  'kisspeptin': 'https://peptidedosages.com/single-peptide-dosages/kisspeptin-10-mg-vial-dosage-protocol/',
+  'kisspeptin-10': 'https://peptidedosages.com/single-peptide-dosages/kisspeptin-10-mg-vial-dosage-protocol/',
+  'kpv': 'https://peptidedosages.com/single-peptide-dosages/kpv-10-mg-vial-dosage-protocol/',
+  'l-carnitine': 'https://peptidedosages.com/single-peptide-dosages/l-carnitine-200-mg-vial-dosage-protocol/',
+  'livagen': 'https://peptidedosages.com/single-peptide-dosages/livagen-20-mg-vial-dosage-protocol/',
+  'll-37': 'https://peptidedosages.com/single-peptide-dosages/ll-37-5-mg-vial-dosage-protocol/',
+  'mazdutide': 'https://peptidedosages.com/single-peptide-dosages/mazdutide-5-mg-vial-dosage-protocol/',
+  'melanotan ii': 'https://peptidedosages.com/single-peptide-dosages/melanotan-ii-10-mg-vial-dosage-protocol/',
+  'mgf': 'https://peptidedosages.com/single-peptide-dosages/mgf-5-mg-vial-dosage-protocol/',
+  'mots-c': 'https://peptidedosages.com/single-peptide-dosages/mots-c-5-mg-vial-dosage-protocol/',
+  'nad+': 'https://peptidedosages.com/single-peptide-dosages/nad-500-mg-10ml-vial-dosage-protocol/',
+  'ovagen': 'https://peptidedosages.com/single-peptide-dosages/ovagen-20-mg-vial-dosage-protocol/',
+  'oxytocin': 'https://peptidedosages.com/single-peptide-dosages/oxytocin-5-mg-vial-dosage-protocol/',
+  'pe-22-28': 'https://peptidedosages.com/single-peptide-dosages/pe-22-28-10-mg-vial-dosage-protocol/',
+  'peg mgf': 'https://peptidedosages.com/single-peptide-dosages/peg-mgf-2-mg-vial-dosage-protocol/',
+  'pegylated mgf': 'https://peptidedosages.com/single-peptide-dosages/peg-mgf-2-mg-vial-dosage-protocol/',
+  'pinealon': 'https://peptidedosages.com/single-peptide-dosages/pinealon-20-mg-vial-dosage-protocol/',
+  'pnc-27': 'https://peptidedosages.com/single-peptide-dosages/pnc-27-30-mg-vial-dosage-protocol/',
+  'prostamax': 'https://peptidedosages.com/single-peptide-dosages/prostamax-20-mg-vial-dosage-protocol/',
+  'pt-141': 'https://peptidedosages.com/single-peptide-dosages/pt-141-10-mg-vial-dosage-protocol/',
+  'retatrutide': 'https://peptidedosages.com/single-peptide-dosages/retatrutide-5-mg-vial-dosage-protocol/',
+  'selank': 'https://peptidedosages.com/single-peptide-dosages/selank-5-mg-vial-dosage-protocol/',
+  'semaglutide': 'https://peptidedosages.com/single-peptide-dosages/semaglutide-5-mg-vial-dosage-protocol/',
+  'semax': 'https://peptidedosages.com/single-peptide-dosages/semax-5-mg-vial-dosage-protocol/',
+  'sermorelin': 'https://peptidedosages.com/single-peptide-dosages/sermorelin-5-mg-vial-dosage-protocol/',
+  'slu-pp-332': 'https://peptidedosages.com/single-peptide-dosages/slu-pp-332-5-mg-vial-dosage-protocol/',
+  'snap-8': 'https://peptidedosages.com/single-peptide-dosages/snap-8-10-mg-vial-dosage-protocol/',
+  'ss-31': 'https://peptidedosages.com/single-peptide-dosages/ss-31-10-mg-vial-dosage-protocol/',
+  'survodutide': 'https://peptidedosages.com/single-peptide-dosages/survodutide-10-mg-vial-dosage-protocol/',
+  'tb-4 frag': 'https://peptidedosages.com/single-peptide-dosages/tb-500-5-mg-vial-dosage-protocol/',
+  'tb-500': 'https://peptidedosages.com/single-peptide-dosages/tb-500-5-mg-vial-dosage-protocol/',
+  'tesamorelin': 'https://peptidedosages.com/single-peptide-dosages/tesamorelin-5-mg-vial-dosage-protocol/',
+  'testagen': 'https://peptidedosages.com/single-peptide-dosages/testagen-20-mg-vial-dosage-protocol/',
+  'thymosin alpha-1': 'https://peptidedosages.com/single-peptide-dosages/thymosin-alpha-1-5-mg-vial-dosage-protocol/',
+  'thymosin beta-4': 'https://peptidedosages.com/single-peptide-dosages/tb-500-5-mg-vial-dosage-protocol/',
+  'tirzepatide': 'https://peptidedosages.com/single-peptide-dosages/tirzepatide-5-mg-vial-dosage-protocol/',
+  'vesugen': 'https://peptidedosages.com/single-peptide-dosages/vesugen-20-mg-vial-dosage-protocol/',
+  'vilon': 'https://peptidedosages.com/single-peptide-dosages/vilon-20-mg-vial-dosage-protocol/',
+};
 let PEPTIDE_DOSAGE_DATA = {};  // loaded from static JSON
 
 async function loadPeptideDosageData() {
@@ -1142,17 +1283,19 @@ function loadLearn() {
   let html = safetyBanner();
   html += '<div class="inner-tabs">';
   html += '<button class="inner-tab active" id="learn-tab-library"  onclick="switchLearnTab(\'library\', this)">Library</button>';
-  html += '<button class="inner-tab"        id="learn-tab-research" onclick="switchLearnTab(\'research\', this)">Research</button>';
   html += '<button class="inner-tab"        id="learn-tab-videos"   onclick="switchLearnTab(\'videos\', this)">Videos</button>';
+  html += '<button class="inner-tab"        id="learn-tab-vendors"  onclick="switchLearnTab(\'vendors\', this)">Vendors</button>';
+  html += '<button class="inner-tab"        id="learn-tab-vendors"  onclick="switchLearnTab(\'vendors\', this)">COA</button>';
   html += '</div>';
   html += '<div class="inner-panel active" id="learn-library">';
   html += renderLibraryPanel();
   html += '</div>';
-  html += '<div class="inner-panel" id="learn-research">';
-  html += '<div class="learn-research-placeholder"><div class="empty-state-icon" style="font-size:32px;margin-bottom:12px">🔬</div><div style="color:var(--muted);font-size:13px">Tap Load to fetch the latest peptide research.</div><button class="btn btn-primary" style="margin-top:16px;max-width:200px" onclick="loadResearch()">Load research</button></div>';
-  html += '</div>';
+
   html += '<div class="inner-panel" id="learn-videos">';
   html += renderVideosPanel();
+  html += '</div>';
+  html += '<div class="inner-panel" id="learn-vendors">';
+  html += renderVendorsPanel();
   html += '</div>';
   el.innerHTML = html;
 }
@@ -1183,6 +1326,71 @@ function renderVideosPanel() {
   });
   html += '</div>';
   return html;
+}
+
+function toSlug(str) {
+  return str.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
+function renderVendorsPanel() {
+  let html = '<div class="vendors-wrap">';
+
+  html += '<div class="vendor-actions">';
+  html += '<a href="https://www.finnrick.com/verify" target="_blank" class="vendor-action-btn vendor-action-primary">🔍 Verify a COA</a>';
+  html += '<a href="https://www.finnrick.com/vendors" target="_blank" class="vendor-action-btn">📋 Browse all 217+ vendors</a>';
+  html += '<a href="https://www.finnrick.com/products" target="_blank" class="vendor-action-btn">💊 Browse by peptide</a>';
+  html += '</div>';
+
+  html += '<div class="vendor-search-block">';
+  html += '<div class="vendor-search-label">Look up a compound on Finnrick</div>';
+  html += '<div class="vendor-search-row">';
+  html += '<input type="text" id="coa-compound-input" class="library-search" placeholder="e.g. BPC-157, Semaglutide…" style="flex:1">';
+  html += '<button class="coa-search-btn" onclick="searchCOAByCompound()">Go →</button>';
+  html += '</div></div>';
+
+  html += '<div class="vendor-search-block">';
+  html += '<div class="vendor-search-label">Look up a vendor on Finnrick</div>';
+  html += '<div class="vendor-search-row">';
+  html += '<input type="text" id="coa-vendor-input" class="library-search" placeholder="Vendor name…" style="flex:1">';
+  html += '<button class="coa-search-btn" onclick="searchCOAByVendor()">Go →</button>';
+  html += '</div></div>';
+
+  html += '<div style="font-size:11px;color:var(--muted);padding:8px 20px 20px;text-align:center">Powered by <a href="https://www.finnrick.com" target="_blank" style="color:var(--accent)">Finnrick.com</a> — 8,900+ tests across 217+ vendors</div>';
+  html += '</div>';
+  return html;
+}
+
+function toSlug(str) {
+  return str.toLowerCase().trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+function searchCOAByCompound() {
+  const val = document.getElementById('coa-compound-input').value.trim();
+  if (!val) return;
+  window.open('https://www.finnrick.com/products/' + toSlug(val), '_blank');
+}
+
+function searchCOAByVendor() {
+  const val = document.getElementById('coa-vendor-input').value.trim();
+  if (!val) return;
+  window.open('https://www.finnrick.com/vendors/' + toSlug(val), '_blank');
+}
+
+function openVendorCOA(vendorName) {
+  window.open('https://www.finnrick.com/vendors/' + toSlug(vendorName), '_blank');
+}
+
+function filterVendorList(query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll('.vendor-chip').forEach(function(btn) {
+    btn.style.display = btn.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
 }
 
 function renderLibraryPanel() {
@@ -1339,7 +1547,11 @@ function renderPeptideCard(container, name, info) {
     html += '</div></div>';
   }
 
-  html += '<div style="font-size:11px;color:var(--muted);padding:12px 0;font-style:italic;border-top:1px solid var(--border);margin-top:8px">Educational reference only. Consult a healthcare provider before use.</div>';
+  const pdUrl = PD_URLS[name.toLowerCase()] || ('https://peptidedosages.com/single-peptide-dosages/?s=' + encodeURIComponent(name));
+  html += '<div style="border-top:1px solid var(--border);margin-top:8px;padding:12px 0;display:flex;align-items:center;justify-content:space-between;gap:12px">';
+  html += '<div style="font-size:11px;color:var(--muted);font-style:italic">Educational reference only.</div>';
+  html += '<a href="' + pdUrl + '" target="_blank" style="font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;white-space:nowrap">Full protocol →</a>';
+  html += '</div>';
   html += '</div>';
   container.innerHTML = html;
   container.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1350,45 +1562,7 @@ function closePeptideCard() {
   if (container) container.innerHTML = '';
 }
 
-async function loadResearch() {
-  const panel = document.getElementById('learn-research');
-  panel.innerHTML = '<div class="peptide-card-loading"><div class="peptide-card-spinner"></div><div style="color:var(--muted);font-size:13px;margin-top:12px">Searching for latest research…</div></div>';
 
-  try {
-    const items = await GET('/api/learn/research');
-    renderResearchPanel(panel, Array.isArray(items) ? items : []);
-  } catch (err) {
-    panel.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div>Could not load research.<br><small>' + err.message + '</small></div>';
-  }
-}
-
-function renderResearchPanel(panel, items) {
-  const now = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  let html = '<div class="research-header">';
-  html += '<span class="research-updated">Updated ' + now + '</span>';
-  html += '<button class="research-refresh" onclick="loadResearch()">↺ Refresh</button>';
-  html += '</div>';
-
-  if (!items.length) {
-    html += '<div class="empty-state">No research items found.</div>';
-  } else {
-    items.forEach(function(item) {
-      const catColors = { Clinical: 'var(--accent)', Research: 'var(--green)', News: 'var(--amber)', Safety: 'var(--red)' };
-      const catColor  = catColors[item.category] || 'var(--muted)';
-      html += '<div class="research-card">';
-      html += '<div class="research-card-top">';
-      html += '<span class="research-cat" style="color:' + catColor + ';border-color:' + catColor + '">' + (item.category || 'Research') + '</span>';
-      html += '<span class="research-date">' + (item.date || '') + '</span>';
-      html += '</div>';
-      html += '<div class="research-title">' + (item.title || '') + '</div>';
-      html += '<div class="research-summary">' + (item.summary || '') + '</div>';
-      html += '<div class="research-source">' + (item.source || '') + '</div>';
-      html += '</div>';
-    });
-  }
-
-  panel.innerHTML = html;
-}
 
 /* ══════════════════════════════════════════
    DOSE CALCULATOR
@@ -1432,6 +1606,13 @@ function loadCalc() {
     '<div style="font-family:var(--mono);font-size:16px;color:var(--muted);margin-top:4px">units</div>' +
     '</div>' +
 
+    '<div style="display:flex;justify-content:center;padding:12px 0 4px;border-top:1px solid var(--border);margin-top:8px">' +
+    '<div style="text-align:center">' +
+    '<div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Doses per vial</div>' +
+    '<div style="font-family:var(--mono);font-size:36px;font-weight:700;color:var(--green);line-height:1" id="calc-doses">—</div>' +
+    '<div style="font-family:var(--mono);font-size:14px;color:var(--muted);margin-top:4px">doses</div>' +
+    '</div></div>' +
+
     '</div></div></div>' +
 
     '<div class="card" style="margin-top:4px"><div class="card-body" style="padding:14px 16px">' +
@@ -1470,9 +1651,11 @@ function runCalc() {
   const units = Math.round(ml * 100 * 10) / 10;
 
   const unit = document.getElementById('calc-unit') ? document.getElementById('calc-unit').value : 'mg';
+  const dosesInVial = Math.floor(vial / dose);
   document.getElementById('calc-conc').textContent  = conc.toFixed(unit === 'IU' ? 0 : 2) + ' ' + unit + '/mL';
   document.getElementById('calc-ml').textContent    = ml.toFixed(3) + ' mL';
   document.getElementById('calc-units').textContent = units.toFixed(1);
+  document.getElementById('calc-doses').textContent = dosesInVial;
   res.style.display = 'block';
 }
 
@@ -1638,6 +1821,29 @@ document.addEventListener('DOMContentLoaded', function() {
   if (modal) {
     modal.addEventListener('click', function(e) {
       if (e.target === modal) closeDoseModal();
+    });
+  }
+  // Close edit log modal on backdrop click
+  const elModal = document.getElementById('edit-log-modal');
+  if (elModal) {
+    elModal.addEventListener('click', function(e) {
+      if (e.target === elModal) closeEditLog();
+    });
+  }
+  // Close edit compound modal on backdrop click (only when clicking backdrop itself)
+  const ecModal = document.getElementById('edit-compound-modal');
+  if (ecModal) {
+    ecModal.addEventListener('click', function(e) {
+      if (e.target === ecModal) closeEditCompoundModal();
+    });
+    const ecSheet = ecModal.querySelector('.dose-modal-sheet');
+    if (ecSheet) ecSheet.addEventListener('click', function(e) { e.stopPropagation(); });
+  }
+  // Close edit protocol modal on backdrop click
+  const epModal = document.getElementById('edit-protocol-modal');
+  if (epModal) {
+    epModal.addEventListener('click', function(e) {
+      if (e.target === epModal) closeEditProtocolModal();
     });
   }
 });

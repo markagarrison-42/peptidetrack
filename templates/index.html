@@ -674,7 +674,7 @@
     /* ════════════════════════════════
        DOSE LOG MODAL
     ════════════════════════════════ */
-    #dose-modal {
+    #dose-modal, .dose-modal {
       display: none;
       position: fixed;
       inset: 0;
@@ -687,11 +687,13 @@
       padding-bottom: var(--safe-bot);
     }
 
-    #dose-modal.open { display: flex; }
+    #dose-modal.open, .dose-modal.open { display: flex; }
 
     .dose-modal-sheet {
       width: 100%;
       max-width: 480px;
+      max-height: 85vh;
+      overflow-y: auto;
       background: var(--surface2);
       border: 1px solid var(--border2);
       border-radius: 24px 24px 0 0;
@@ -1475,6 +1477,122 @@
     #quick-photo-input { display: none; }
 
 
+
+    /* ════════════════════════════════
+       VENDORS / COA
+    ════════════════════════════════ */
+    .vendors-wrap {
+      padding: 12px 0 8px;
+    }
+
+    .coa-verify-btn {
+      display: block;
+      margin: 8px 20px 16px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(0,229,212,0.1), rgba(124,95,230,0.1));
+      border: 1px solid rgba(0,229,212,0.3);
+      border-radius: 12px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+
+    .vendor-search-block {
+      padding: 0 20px 12px;
+    }
+
+    .vendor-search-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .vendor-search-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .coa-search-btn {
+      padding: 12px 16px;
+      background: var(--grad-primary);
+      color: #07040f;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+
+    .vendor-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 16px 20px 8px;
+    }
+
+    .vendor-action-btn {
+      display: block;
+      padding: 14px 16px;
+      background: var(--grad-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      transition: border-color 0.15s;
+    }
+
+    .vendor-action-primary {
+      background: linear-gradient(135deg, rgba(0,229,212,0.12), rgba(124,95,230,0.12));
+      border-color: rgba(0,229,212,0.3);
+      color: var(--accent);
+    }
+
+    .vendor-list {
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .vendor-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 16px;
+      background: var(--grad-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .vendor-chip:active {
+      border-color: var(--accent2);
+    }
+
+    .vendor-chip-arrow {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
     /* ════════════════════════════════
        SAFETY BANNER
     ════════════════════════════════ */
@@ -1532,11 +1650,258 @@
       height: 100%;
       border: none;
     }
+
+    /* ════════════════════════════════
+       COA / VENDORS TAB
+    ════════════════════════════════ */
+    .coa-verify-btn {
+      display: block;
+      padding: 14px 16px;
+      background: rgba(0,229,212,0.08);
+      border: 1px solid rgba(0,229,212,0.25);
+      border-radius: 12px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      margin-bottom: 20px;
+      transition: background 0.15s;
+    }
+
+    .coa-verify-btn:active { background: rgba(0,229,212,0.15); }
+
+    .coa-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .coa-search-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .coa-go-btn {
+      padding: 12px 18px;
+      background: var(--grad-primary);
+      border: none;
+      border-radius: 12px;
+      color: #07040f;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .coa-vendor-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .coa-vendor-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 16px;
+      background: var(--grad-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: border-color 0.15s;
+    }
+
+    .coa-vendor-chip::after {
+      content: '→';
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .coa-vendor-chip:active {
+      border-color: var(--accent2);
+    }
     /* ════════════════════════════════
        SCROLLBAR HIDDEN
     ════════════════════════════════ */
     ::-webkit-scrollbar { display: none; }
     * { scrollbar-width: none; }
+
+    /* ── DAY PICKER BUTTONS ── */
+    .day-btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 44px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .day-btn-active,
+    .day-btn.day-btn-active {
+      background: var(--accent) !important;
+      color: #07040f !important;
+      border-color: var(--accent) !important;
+    }
+
+
+    /* ── TODAY / HISTORY TABS ── */
+    .today-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0 20px;
+    }
+    .today-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 14px 0;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .today-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── HISTORY ── */
+    .history-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 8px;
+    }
+    .history-nav-btn {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .history-nav-btn:not(:disabled):hover { color: var(--accent); border-color: var(--accent); }
+    .history-nav-btn:disabled { opacity: 0.25; cursor: default; }
+    .history-nav-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+    .history-date-group {
+      padding: 0 20px;
+      margin-bottom: 20px;
+    }
+    .history-date-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .history-entry {
+      background: linear-gradient(135deg, #13102a 0%, #0e0a1c 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .history-entry::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    }
+    .history-entry-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.1px;
+      margin-bottom: 3px;
+    }
+    .history-entry-dose {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .history-entry-notes {
+      font-size: 11px;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 3px;
+    }
+    .history-entry-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .history-off-badge {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--amber);
+      background: rgba(255,179,0,0.1);
+      border: 1px solid rgba(255,179,0,0.2);
+      border-radius: 4px;
+      padding: 1px 7px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ── ICON BUTTONS ── */
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .icon-btn:active { opacity: 0.7; }
+    .icon-btn.danger {
+      color: var(--red);
+      border-color: rgba(255,82,82,0.25);
+    }
+
   </style>
 </head>
 <body>
@@ -1705,6 +2070,107 @@
       <button class="btn btn-ghost" id="onboard-back-btn" onclick="onboardBack()" style="display:none;flex:1">Back</button>
       <button class="btn btn-primary" id="onboard-next-btn" onclick="onboardNext()" style="flex:1">Continue</button>
     </div>
+  </div>
+</div>
+
+
+
+<!-- ── EDIT COMPOUND MODAL ── -->
+<div id="edit-compound-modal" class="dose-modal">
+  <div class="dose-modal-sheet">
+    <div class="dose-modal-handle"></div>
+    <div class="dose-modal-title" id="ecm-name">Compound</div>
+    <div class="dose-modal-sub">Edit compound details</div>
+    <input type="hidden" id="ecm-item-id">
+    <div class="dose-modal-input-wrap" style="margin-bottom:16px">
+      <input type="number" id="ecm-dose" inputmode="decimal" step="0.01" placeholder="0">
+      <span class="dose-modal-unit" id="ecm-unit">mg</span>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>Frequency</label>
+      <select id="ecm-frequency" onchange="toggleEcmDayPicker(this.value)">
+        <option>Daily</option>
+        <option>Weekly</option>
+        <option>Twice daily</option>
+        <option>3x/week</option>
+        <option>Monthly</option>
+        <option>As needed</option>
+        <option>Specific days</option>
+      </select>
+    </div>
+    <div id="ecm-days" style="display:none;margin-bottom:12px">
+      <label style="display:block;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Select days</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="day-btn" id="ecm-day-Mon" data-day="Mon" onclick="toggleEcmDayBtn(this)">Mon</button>
+        <button type="button" class="day-btn" id="ecm-day-Tue" data-day="Tue" onclick="toggleEcmDayBtn(this)">Tue</button>
+        <button type="button" class="day-btn" id="ecm-day-Wed" data-day="Wed" onclick="toggleEcmDayBtn(this)">Wed</button>
+        <button type="button" class="day-btn" id="ecm-day-Thu" data-day="Thu" onclick="toggleEcmDayBtn(this)">Thu</button>
+        <button type="button" class="day-btn" id="ecm-day-Fri" data-day="Fri" onclick="toggleEcmDayBtn(this)">Fri</button>
+        <button type="button" class="day-btn" id="ecm-day-Sat" data-day="Sat" onclick="toggleEcmDayBtn(this)">Sat</button>
+        <button type="button" class="day-btn" id="ecm-day-Sun" data-day="Sun" onclick="toggleEcmDayBtn(this)">Sun</button>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>Route</label>
+      <select id="ecm-route">
+        <option>SubQ</option>
+        <option>IM</option>
+        <option>Oral</option>
+        <option>Sublingual</option>
+        <option>Intranasal</option>
+        <option>Topical</option>
+        <option>Patch</option>
+        <option>IV</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>Timing (optional)</label>
+      <input type="text" id="ecm-timing" placeholder="e.g. Fasted AM, Pre-bed">
+    </div>
+    <div id="ecm-flash" class="flash-msg"></div>
+    <button class="btn btn-primary" onclick="saveEditCompoundModal()" style="margin-top:4px">Save changes</button>
+    <button class="btn btn-ghost" onclick="closeEditCompoundModal()" style="margin-top:8px">Cancel</button>
+  </div>
+</div>
+
+<!-- ── EDIT PROTOCOL MODAL ── -->
+<div id="edit-protocol-modal" class="dose-modal">
+  <div class="dose-modal-sheet">
+    <div class="dose-modal-handle"></div>
+    <div class="dose-modal-title">Edit protocol</div>
+    <input type="hidden" id="epm-proto-id">
+    <div class="field" style="margin-bottom:12px">
+      <label>Protocol name</label>
+      <input type="text" id="epm-name" placeholder="e.g. Body Recomp">
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>Start date</label>
+      <input type="date" id="epm-start">
+    </div>
+    <div id="epm-flash" class="flash-msg"></div>
+    <button class="btn btn-primary" onclick="saveEditProtocolModal()" style="margin-top:4px">Save changes</button>
+    <button class="btn btn-ghost" onclick="closeEditProtocolModal()" style="margin-top:8px">Cancel</button>
+  </div>
+</div>
+
+<!-- ── EDIT LOG MODAL ── -->
+<div id="edit-log-modal" class="dose-modal">
+  <div class="dose-modal-sheet">
+    <div class="dose-modal-handle"></div>
+    <div class="dose-modal-title">Edit dose log</div>
+    <div class="dose-modal-sub">Update the logged dose amount</div>
+    <div class="dose-modal-input-wrap">
+      <input type="number" id="el-dose" inputmode="decimal" step="0.01">
+      <span class="dose-modal-unit">mg</span>
+    </div>
+    <div class="field" style="margin:0 0 12px">
+      <label>Notes (optional)</label>
+      <input type="text" id="el-notes" placeholder="Any notes…">
+    </div>
+    <input type="hidden" id="el-log-id">
+    <div id="el-flash" class="flash-msg"></div>
+    <button class="btn btn-primary" onclick="saveEditLog()" style="margin-top:4px">Save changes</button>
+    <button class="btn btn-ghost" onclick="closeEditLog()" style="margin-top:8px">Cancel</button>
   </div>
 </div>
 
