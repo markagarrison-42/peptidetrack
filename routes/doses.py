@@ -22,8 +22,9 @@ def today():
     patient_id = current_user.id
     today_date = date.today()
     logs = DoseLog.query.filter_by(patient_id=patient_id, date=today_date).all()
-    taken_ids = [l.protocol_item_id for l in logs]
-    return jsonify({"date": today_date.isoformat(), "taken_item_ids": taken_ids}), 200
+    taken_ids   = [l.protocol_item_id for l in logs if not l.skipped]
+    skipped_ids = [l.protocol_item_id for l in logs if l.skipped]
+    return jsonify({"date": today_date.isoformat(), "taken_item_ids": taken_ids, "skipped_item_ids": skipped_ids}), 200
 
 
 @doses_bp.route("/toggle", methods=["POST"])
@@ -58,6 +59,34 @@ def toggle():
         db.session.add(log)
         db.session.commit()
         return jsonify({"taken": True, "protocol_item_id": item_id}), 201
+
+
+@doses_bp.route("/skip", methods=["POST"])
+@login_required
+def skip():
+    data = request.get_json()
+    item_id    = int(data["protocol_item_id"])
+    today_date = date.today()
+    patient_id = current_user.id
+    item = ProtocolItem.query.get_or_404(item_id)
+    # Remove any existing log for today (taken or skipped)
+    existing = DoseLog.query.filter_by(
+        patient_id=patient_id,
+        protocol_item_id=item_id,
+        date=today_date,
+    ).first()
+    if existing:
+        db.session.delete(existing)
+    log = DoseLog(
+        patient_id=patient_id,
+        protocol_item_id=item_id,
+        date=today_date,
+        dose_mg_taken=None,
+        skipped=True,
+    )
+    db.session.add(log)
+    db.session.commit()
+    return jsonify({"skipped": True, "protocol_item_id": item_id}), 201
 
 
 @doses_bp.route("/log-unscheduled", methods=["POST"])

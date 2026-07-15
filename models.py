@@ -266,6 +266,7 @@ class DoseLog(db.Model):
     injection_site     = db.Column(db.String(50), nullable=True)
     notes              = db.Column(db.Text,    nullable=True)
     off_schedule       = db.Column(db.Boolean, default=False)
+    skipped            = db.Column(db.Boolean, default=False)
     created_at         = db.Column(db.DateTime, default=datetime.utcnow)
 
     protocol_item = db.relationship("ProtocolItem", backref="dose_logs", lazy=True)
@@ -282,6 +283,7 @@ class DoseLog(db.Model):
             "injection_site":   self.injection_site,
             "notes":            self.notes,
             "off_schedule":     self.off_schedule or False,
+            "skipped":          self.skipped or False,
         }
 
 

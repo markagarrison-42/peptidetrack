@@ -311,7 +311,7 @@ async function loadTodayLog() {
     const active    = protocols.filter(function(p) { return p.active; });
     S.protocols     = protocols;
     const logPanel  = document.getElementById('today-log-panel');
-    if (logPanel) renderToday(logPanel, active, todayData.taken_item_ids || []);
+    if (logPanel) renderToday(logPanel, active, todayData.taken_item_ids || [], todayData.skipped_item_ids || []);
   } catch (err) {
     const logPanel = document.getElementById('today-log-panel');
     if (logPanel) logPanel.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div>' + err.message + '</div>';
@@ -425,7 +425,7 @@ async function deleteLog(logId) {
   } catch (err) { alert(err.message); }
 }
 
-function renderToday(el, protocols, takenIds) {
+function renderToday(el, protocols, takenIds, skippedIds) {
   const dayName  = fmtDay();
   const dateFull = fmtMonthDay();
   const todayDay = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
@@ -479,10 +479,10 @@ function renderToday(el, protocols, takenIds) {
       const protoItems = allItems.filter(function(e) { return e.protoName === proto.name; });
       if (!protoItems.length) return;
       html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin:16px 0 6px">' + proto.name + '</div>';
-      protoItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds); });
+      protoItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds); });
     });
   } else {
-    allItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds); });
+    allItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds); });
   }
 
   html += '</div>';
@@ -493,39 +493,64 @@ function renderToday(el, protocols, takenIds) {
   el.innerHTML = html;
 }
 
-function renderDoseCard(item, takenIds) {
-  const isTaken  = takenIds.includes(item.id);
-  const doseUnit = (item.notes && item.notes.startsWith('unit:')) ? item.notes.split(':')[1] : 'mg';
-  const symbol   = isTaken ? '✓' : '+';
-
-  let html = '<div class="dose-card' + (isTaken ? ' taken' : '') + '">';
-  html += '<button class="dose-check' + (isTaken ? ' checked' : '') + '" onclick="handleDoseTap(' + item.id + ', \'' + item.compound_name.replace(/'/g, "\\'") + '\', ' + item.dose_mg + ', \'' + doseUnit + '\', ' + (isTaken ? 'true' : 'false') + ', this)">';
+function renderDoseCard(item, takenIds, skippedIds) {
+  var isTaken   = takenIds.includes(item.id);
+  var isSkipped = (skippedIds || []).includes(item.id);
+  var doseUnit  = (item.notes && item.notes.startsWith('unit:')) ? item.notes.split(':')[1] : 'mg';
+  var cardClass = 'dose-card' + (isTaken ? ' taken' : '') + (isSkipped ? ' skipped' : '');
+  var symbol    = isTaken ? '✓' : (isSkipped ? '—' : '+');
+  var btnClass  = 'dose-check' + (isTaken ? ' checked' : '') + (isSkipped ? ' skipped-check' : '');
+  var html = '<div class="' + cardClass + '">';
+  html += '<button class="' + btnClass + '"';
+  html += ' data-item-id="' + item.id + '"';
+  html += ' data-name="' + item.compound_name.replace(/"/g, '&quot;') + '"';
+  html += ' data-dose="' + item.dose_mg + '"';
+  html += ' data-unit="' + doseUnit + '"';
+  html += ' data-taken="' + (isTaken ? '1' : '0') + '"';
+  html += ' data-skipped="' + (isSkipped ? '1' : '0') + '"';
+  html += ' onclick="handleDoseTap(this)">';
   html += '<span class="dose-check-symbol">' + symbol + '</span>';
   html += '</button>';
   html += '<div class="dose-info">';
   html += '<div class="dose-name">' + item.compound_name + '</div>';
   html += '<div class="dose-meta">' + item.dose_mg + ' ' + doseUnit;
-  if (item.frequency) html += ' &nbsp;·&nbsp; ' + item.frequency;
-  if (item.route)     html += ' &nbsp;·&nbsp; ' + item.route;
-  if (item.timing)    html += ' &nbsp;·&nbsp; ' + item.timing;
+  if (item.frequency) html += ' · ' + item.frequency;
+  if (item.route)     html += ' · ' + item.route;
+  if (item.timing)    html += ' · ' + item.timing;
   html += '</div>';
   if (item.dose_units) {
     html += '<div class="dose-units-badge">💉 ' + item.dose_units + ' units</div>';
   }
-  html += '</div></div>';
+  html += '</div>';
+  if (!isTaken && !isSkipped) {
+    html += '<button class="skip-btn" data-item-id="' + item.id + '" onclick="handleSkipTap(this)">Skip</button>';
+  }
+  html += '</div>';
   return html;
 }
-
-async function handleDoseTap(itemId, compoundName, defaultDose, doseUnit, isTaken, btn) {
-  if (isTaken) {
-    // Untoggle immediately — no modal needed
+async function handleDoseTap(btn) {
+  var itemId    = parseInt(btn.getAttribute('data-item-id'));
+  var name      = btn.getAttribute('data-name');
+  var dose      = parseFloat(btn.getAttribute('data-dose'));
+  var unit      = btn.getAttribute('data-unit');
+  var isTaken   = btn.getAttribute('data-taken') === '1';
+  var isSkipped = btn.getAttribute('data-skipped') === '1';
+  if (isTaken || isSkipped) {
     try {
       await POST('/api/doses/toggle', { protocol_item_id: itemId });
-      loadToday();
+      loadTodayLog();
     } catch (err) { alert(err.message); }
   } else {
-    showDoseModal(itemId, compoundName, defaultDose, doseUnit, false);
+    showDoseModal(itemId, name, dose, unit);
   }
+}
+
+async function handleSkipTap(btn) {
+  var itemId = parseInt(btn.getAttribute('data-item-id'));
+  try {
+    await POST('/api/doses/skip', { protocol_item_id: itemId });
+    loadTodayLog();
+  } catch (err) { alert(err.message); }
 }
 
 function renderUnscheduledSection(protocols) {
@@ -658,7 +683,7 @@ function renderProtocolCard(proto, patientId) {
   } else {
     items.forEach(function(item) {
       const itemUnit = (item.notes && item.notes.startsWith('unit:')) ? item.notes.split(':')[1] : 'mg';
-      html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">';
+      html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 0;border-bottom:2px solid var(--border2);margin-bottom:4px">';
       html += '<div style="flex:1">';
       html += '<div style="font-size:15px;font-weight:600">' + item.compound_name + '</div>';
       html += '<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px">';
@@ -755,11 +780,18 @@ function updateVialLabel(protocolId) {
   if (unit && label) label.textContent = 'Vial size (' + unit.value + ')';
 }
 
-function toggleDayPicker(val, rowId) {
-  const row = document.getElementById(rowId);
-  if (row) row.style.display = val === 'Specific days' ? 'block' : 'none';
-}
 
+function toggleDayPicker(val, rowId, labelId) {
+  var row   = document.getElementById(rowId);
+  var label = labelId ? document.getElementById(labelId) : null;
+  var showDays = (val === 'Specific days' || val === 'Weekly' || val === '3x/week');
+  if (row) row.style.display = showDays ? 'block' : 'none';
+  if (label) {
+    if (val === 'Weekly')       label.textContent = 'Which day? (pick 1)';
+    else if (val === '3x/week') label.textContent = 'Which days? (pick 3)';
+    else                        label.textContent = 'Specific days';
+  }
+}
 function toggleDayBtn(btn) {
   const active = btn.getAttribute('data-selected') === 'true';
   if (active) {
@@ -799,8 +831,9 @@ async function addMyCompound(protocolId) {
   if (!name || !dose) { flash('ac-flash-' + protocolId, 'Name and dose required', true); return; }
   try {
     const route      = document.getElementById('ac-route-' + protocolId).value;
-    const freqVal    = document.getElementById('ac-freq-' + protocolId).value;
-    const frequency  = freqVal === 'Specific days' ? (getSelectedDays(protocolId) || 'Specific days') : freqVal;
+    const freqRaw    = document.getElementById('ac-freq-' + protocolId).value;
+    const needsDays  = (freqRaw === 'Specific days' || freqRaw === 'Weekly' || freqRaw === '3x/week');
+    const frequency  = needsDays ? (getSelectedDays(protocolId) || freqRaw) : freqRaw;
     const unit       = document.getElementById('ac-unit-' + protocolId).value;
     const injectable = ['SubQ', 'IM', 'IV'].includes(route);
     const compound   = await POST('/api/compounds/', {
@@ -830,10 +863,10 @@ function editCompoundItem(itemId, patientId) {
   });
   if (!foundItem) return;
   const unit = (foundItem.notes && foundItem.notes.startsWith('unit:')) ? foundItem.notes.split(':')[1] : 'mg';
-  showEditCompoundModal(itemId, foundItem.compound_name, foundItem.dose_mg, unit, foundItem.frequency, foundItem.route, foundItem.timing);
+  showEditCompoundModal(itemId, foundItem.compound_name, foundItem.dose_mg, unit, foundItem.frequency, foundItem.route, foundItem.timing, foundItem.vial_size_mg, foundItem.recon_volume_ml, foundItem);
 }
 
-function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timing) {
+function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timing, vialSize, reconVol, foundItem) {
   const modal = document.getElementById('edit-compound-modal');
   document.getElementById('ecm-item-id').value    = itemId;
   document.getElementById('ecm-name').textContent = name;
@@ -859,8 +892,20 @@ function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timin
   }
   toggleEcmDayPicker(isSpecific ? 'Specific days' : (frequency || 'Daily'));
   const routeSel = document.getElementById('ecm-route');
-  if (routeSel) routeSel.value = route || 'SubQ';
+  if (routeSel) {
+    routeSel.value = route || 'SubQ';
+    routeSel.onchange = function() {
+      var ecRecon = document.getElementById('ecm-recon');
+      if (ecRecon) ecRecon.style.display = ['SubQ','IM','IV'].includes(this.value) ? 'block' : 'none';
+    };
+  }
   document.getElementById('ecm-flash').textContent = '';
+  // Reconstitution fields
+  var ecRecon = document.getElementById('ecm-recon');
+  var injectable = ['SubQ','IM','IV'].includes(route || 'SubQ');
+  if (ecRecon) ecRecon.style.display = injectable ? 'block' : 'none';
+  if (document.getElementById('ecm-vial'))  document.getElementById('ecm-vial').value  = vialSize  || '';
+  if (document.getElementById('ecm-water')) document.getElementById('ecm-water').value = reconVol  || '';
   modal.classList.add('open');
 }
 
@@ -874,8 +919,7 @@ function toggleEcmDayPicker(val) {
   if (picker) picker.style.display = val === 'Specific days' ? 'block' : 'none';
 }
 
-function toggleEcmDayBtn(btn, evt) {
-  if (evt) evt.stopPropagation();
+function toggleEcmDayBtn(btn) {
   const active = btn.getAttribute('data-selected') === 'true';
   btn.setAttribute('data-selected', active ? 'false' : 'true');
   btn.classList.toggle('day-btn-active', !active);
@@ -896,12 +940,16 @@ async function saveEditCompoundModal() {
   const freq    = freqRaw === 'Specific days' ? (getEcmSelectedDays() || 'Specific days') : freqRaw;
   const route   = document.getElementById('ecm-route').value;
   if (isNaN(dose) || dose <= 0) { flash('ecm-flash', 'Enter a valid dose', true); return; }
+  var vial  = document.getElementById('ecm-vial')  ? parseFloat(document.getElementById('ecm-vial').value)  || null : null;
+  var water = document.getElementById('ecm-water') ? parseFloat(document.getElementById('ecm-water').value) || null : null;
   try {
     await PUT('/api/protocols/items/' + itemId, {
-      dose_mg:   dose,
-      timing:    timing || null,
-      frequency: freq,
-      route:     route,
+      dose_mg:         dose,
+      timing:          timing || null,
+      frequency:       freq,
+      route:           route,
+      vial_size_mg:    vial,
+      recon_volume_ml: water,
     });
     closeEditCompoundModal();
     loadProtocol();
@@ -1361,13 +1409,6 @@ function renderVendorsPanel() {
   html += '<div style="font-size:11px;color:var(--muted);padding:8px 20px 20px;text-align:center">Powered by <a href="https://www.finnrick.com" target="_blank" style="color:var(--accent)">Finnrick.com</a> — 8,900+ tests across 217+ vendors</div>';
   html += '</div>';
   return html;
-}
-
-function toSlug(str) {
-  return str.toLowerCase().trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
 }
 
 function searchCOAByCompound() {
@@ -1830,15 +1871,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (e.target === elModal) closeEditLog();
     });
   }
-  // Close edit compound modal on backdrop click (only when clicking backdrop itself)
-  const ecModal = document.getElementById('edit-compound-modal');
-  if (ecModal) {
-    ecModal.addEventListener('click', function(e) {
-      if (e.target === ecModal) closeEditCompoundModal();
-    });
-    const ecSheet = ecModal.querySelector('.dose-modal-sheet');
-    if (ecSheet) ecSheet.addEventListener('click', function(e) { e.stopPropagation(); });
-  }
+  // Edit compound modal: no backdrop close (day buttons need multiple taps)
   // Close edit protocol modal on backdrop click
   const epModal = document.getElementById('edit-protocol-modal');
   if (epModal) {

@@ -1902,6 +1902,38 @@
       border-color: rgba(255,82,82,0.25);
     }
 
+
+    /* ── SKIP BUTTON ── */
+    .skip-btn {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .skip-btn:active { opacity: 0.7; }
+
+    /* ── SKIPPED DOSE CARD ── */
+    .dose-card.skipped {
+      opacity: 0.55;
+    }
+    .dose-check.skipped-check {
+      border-color: var(--border2);
+      background: transparent;
+    }
+    .dose-check.skipped-check .dose-check-symbol {
+      color: var(--muted);
+      font-size: 20px;
+    }
+
   </style>
 </head>
 <body>
@@ -2127,6 +2159,19 @@
       <label>Timing (optional)</label>
       <input type="text" id="ecm-timing" placeholder="e.g. Fasted AM, Pre-bed">
     </div>
+    <div id="ecm-recon" style="display:none">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:4px 0 10px">Reconstitution</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="field" style="margin:0">
+          <label>Vial size (mg)</label>
+          <input type="number" id="ecm-vial" step="0.1" inputmode="decimal" placeholder="5">
+        </div>
+        <div class="field" style="margin:0">
+          <label>Bac water (mL)</label>
+          <input type="number" id="ecm-water" step="0.1" inputmode="decimal" placeholder="2">
+        </div>
+      </div>
+    </div>
     <div id="ecm-flash" class="flash-msg"></div>
     <button class="btn btn-primary" onclick="saveEditCompoundModal()" style="margin-top:4px">Save changes</button>
     <button class="btn btn-ghost" onclick="closeEditCompoundModal()" style="margin-top:8px">Cancel</button>
@@ -2178,6 +2223,6 @@
 <input type="file" id="quick-photo-input" accept="image/*" capture="user">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="/static/app.js?v=3"></script>
+<script src="/static/app.js?v=10"></script>
 </body>
 </html>
