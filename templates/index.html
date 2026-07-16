@@ -2081,6 +2081,10 @@
       <input type="number" id="dose-modal-amount" inputmode="decimal" step="0.01">
       <span class="dose-modal-unit" id="dose-modal-unit">mg</span>
     </div>
+    <div class="field" style="margin:0 0 12px">
+      <label>Notes (optional)</label>
+      <input type="text" id="dose-modal-notes" placeholder="e.g. injection site, timing note…">
+    </div>
     <div id="dose-modal-flash" class="flash-msg"></div>
     <button class="btn btn-primary" id="dose-modal-confirm" onclick="confirmDoseModal()" style="margin-top:4px">Log dose</button>
     <button class="btn btn-ghost" onclick="closeDoseModal()" style="margin-top:8px">Cancel</button>
@@ -2223,6 +2227,6 @@
 <input type="file" id="quick-photo-input" accept="image/*" capture="user">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="/static/app.js?v=10"></script>
+<script src="/static/app.js?v=3"></script>
 </body>
 </html>

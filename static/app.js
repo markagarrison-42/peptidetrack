@@ -247,14 +247,18 @@ function closeDoseModal() {
   if (btn) { btn.disabled = false; btn.textContent = 'Log dose'; }
   const flash = document.getElementById('dose-modal-flash');
   if (flash) flash.textContent = '';
+  const notesEl = document.getElementById('dose-modal-notes');
+  if (notesEl) notesEl.value = '';
 }
-
 async function confirmDoseModal() {
   const btn         = document.getElementById('dose-modal-confirm');
   const itemId      = parseInt(btn.getAttribute('data-item-id'));
   const unit        = btn.getAttribute('data-unit');
   const unscheduled = btn.getAttribute('data-unscheduled') === '1';
   const amount      = parseFloat(document.getElementById('dose-modal-amount').value);
+  const notesEl     = document.getElementById('dose-modal-notes');
+  const notes       = notesEl ? notesEl.value.trim() || null : null;
+  const localDate   = new Date().toLocaleDateString('en-CA');
 
   if (isNaN(amount) || amount <= 0) {
     flash('dose-modal-flash', 'Enter a valid dose', true);
@@ -269,17 +273,19 @@ async function confirmDoseModal() {
       await POST('/api/doses/log-unscheduled', {
         protocol_item_id: itemId,
         dose_mg_taken:    amount,
+        local_date:       localDate,
+        notes:            notes,
       });
-      closeDoseModal();
-      loadToday();
     } else {
       await POST('/api/doses/toggle', {
         protocol_item_id: itemId,
         dose_mg_taken:    amount,
+        local_date:       localDate,
+        notes:            notes,
       });
-      closeDoseModal();
-      loadToday();
     }
+    closeDoseModal();
+    loadTodayLog();
   } catch (err) {
     flash('dose-modal-flash', err.message, true);
     btn.disabled = false;
@@ -307,7 +313,7 @@ async function loadTodayLog() {
     const me        = await GET('/auth/me');
     S.userId        = me.id;
     const protocols = await GET('/api/protocols/patient/' + me.id);
-    const todayData = await GET('/api/doses/today');
+    const todayData = await GET('/api/doses/today?local_date=' + new Date().toLocaleDateString('en-CA'));
     const active    = protocols.filter(function(p) { return p.active; });
     S.protocols     = protocols;
     const logPanel  = document.getElementById('today-log-panel');
@@ -537,7 +543,7 @@ async function handleDoseTap(btn) {
   var isSkipped = btn.getAttribute('data-skipped') === '1';
   if (isTaken || isSkipped) {
     try {
-      await POST('/api/doses/toggle', { protocol_item_id: itemId });
+      await POST('/api/doses/toggle', { protocol_item_id: itemId, local_date: new Date().toLocaleDateString('en-CA') });
       loadTodayLog();
     } catch (err) { alert(err.message); }
   } else {
@@ -548,7 +554,7 @@ async function handleDoseTap(btn) {
 async function handleSkipTap(btn) {
   var itemId = parseInt(btn.getAttribute('data-item-id'));
   try {
-    await POST('/api/doses/skip', { protocol_item_id: itemId });
+    await POST('/api/doses/skip', { protocol_item_id: itemId, local_date: new Date().toLocaleDateString('en-CA') });
     loadTodayLog();
   } catch (err) { alert(err.message); }
 }
@@ -683,7 +689,11 @@ function renderProtocolCard(proto, patientId) {
   } else {
     items.forEach(function(item) {
       const itemUnit = (item.notes && item.notes.startsWith('unit:')) ? item.notes.split(':')[1] : 'mg';
-      html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 0;border-bottom:2px solid var(--border2);margin-bottom:4px">';
+      const sUnit    = itemUnit;
+      // Compound wrapper - includes info row + syringe guide, separated from next compound
+      html += '<div style="padding:16px 0;border-bottom:3px solid var(--border2)">';
+      // Info row
+      html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px">';
       html += '<div style="flex:1">';
       html += '<div style="font-size:15px;font-weight:600">' + item.compound_name + '</div>';
       html += '<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px">';
@@ -693,17 +703,16 @@ function renderProtocolCard(proto, patientId) {
       if (item.timing)    html += ' · ' + item.timing;
       html += '</div>';
       if (item.dose_units) {
-        html += '<div style="font-family:var(--mono);font-size:11px;color:var(--accent);background:rgba(0,212,200,0.08);padding:2px 8px;border-radius:4px;margin-top:5px;display:inline-block">💉 ' + item.dose_units + ' units</div>';
+        html += '<div style="font-family:var(--mono);font-size:11px;color:var(--accent);background:rgba(0,229,212,0.08);padding:2px 8px;border-radius:4px;margin-top:5px;display:inline-block">💉 ' + item.dose_units + ' units</div>';
       }
       html += '</div>';
       html += '<div style="display:flex;gap:6px;flex-shrink:0">';
       html += '<button onclick="editCompoundItem(' + item.id + ', ' + patientId + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer">Edit</button>';
       html += '<button onclick="removeCompoundItem(' + item.id + ', ' + patientId + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--red);font-size:12px;cursor:pointer">✕</button>';
       html += '</div></div>';
-
+      // Syringe guide (same compound block)
       if (item.dose_units && item.vial_size_mg) {
-        const sUnit = (item.notes && item.notes.startsWith('unit:')) ? item.notes.split(':')[1] : 'mg';
-        html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:8px">';
+        html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px">';
         html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Syringe guide</div>';
         html += '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.9">';
         html += item.vial_size_mg + sUnit + ' vial / ' + item.recon_volume_ml + 'mL bac water = ' + item.concentration_mg_per_ml + ' ' + sUnit + '/mL<br>';
@@ -713,6 +722,7 @@ function renderProtocolCard(proto, patientId) {
         html += '<div style="font-family:var(--mono);font-size:32px;font-weight:700;color:var(--accent);line-height:1">' + item.dose_units + '<span style="font-size:14px;color:var(--muted)"> units</span></div></div>';
         html += '</div>';
       }
+      html += '</div>'; // end compound wrapper
     });
   }
 
