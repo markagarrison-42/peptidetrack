@@ -698,9 +698,10 @@ function renderProtocolCard(proto, patientId) {
       html += '<div style="font-size:15px;font-weight:600">' + item.compound_name + '</div>';
       html += '<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px">';
       html += item.dose_mg + ' ' + itemUnit;
-      if (item.frequency) html += ' · ' + item.frequency;
-      if (item.route)     html += ' · ' + item.route;
-      if (item.timing)    html += ' · ' + item.timing;
+      if (item.frequency)     html += ' · ' + item.frequency;
+      if (item.route)         html += ' · ' + item.route;
+      if (item.timing)        html += ' · ' + item.timing;
+      if (item.reminder_time) html += ' · 🔔 ' + item.reminder_time;
       html += '</div>';
       if (item.dose_units) {
         html += '<div style="font-family:var(--mono);font-size:11px;color:var(--accent);background:rgba(0,229,212,0.08);padding:2px 8px;border-radius:4px;margin-top:5px;display:inline-block">💉 ' + item.dose_units + ' units</div>';
@@ -759,6 +760,7 @@ function renderAddCompoundForm(protocolId) {
   html += '<div class="field"><label>Route</label><select id="ac-route-' + protocolId + '" onchange="toggleReconSection(this.value, ' + protocolId + ')"><option>SubQ</option><option>IM</option><option>Oral</option><option>Sublingual</option><option>Intranasal</option><option>Topical</option><option>Patch</option><option>IV</option></select></div>';
   html += '</div>';
   html += '<div class="field"><label>Timing (optional)</label><input type="text" id="ac-timing-' + protocolId + '" placeholder="e.g. Fasted AM, With food, Pre-bed"></div>';
+  html += '<div class="field"><label>Reminder time (optional)</label><input type="time" id="ac-reminder-' + protocolId + '"></div>';
   html += '<div class="field" id="ac-days-' + protocolId + '" style="display:none"><label>Specific days</label>';
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">';
   ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(d) {
@@ -859,6 +861,7 @@ async function addMyCompound(protocolId) {
       vial_size_mg:    (injectable && document.getElementById('ac-vial-' + protocolId).value) ? document.getElementById('ac-vial-' + protocolId).value : null,
       recon_volume_ml: (injectable && document.getElementById('ac-water-' + protocolId).value) ? document.getElementById('ac-water-' + protocolId).value : null,
       notes:           unit !== 'mg' ? 'unit:' + unit : null,
+      reminder_time:   document.getElementById('ac-reminder-' + protocolId) ? document.getElementById('ac-reminder-' + protocolId).value || null : null,
     });
     loadProtocol();
   } catch (err) { flash('ac-flash-' + protocolId, err.message, true); }
@@ -914,8 +917,9 @@ function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timin
   var ecRecon = document.getElementById('ecm-recon');
   var injectable = ['SubQ','IM','IV'].includes(route || 'SubQ');
   if (ecRecon) ecRecon.style.display = injectable ? 'block' : 'none';
-  if (document.getElementById('ecm-vial'))  document.getElementById('ecm-vial').value  = vialSize  || '';
-  if (document.getElementById('ecm-water')) document.getElementById('ecm-water').value = reconVol  || '';
+  if (document.getElementById('ecm-vial'))     document.getElementById('ecm-vial').value     = vialSize  || '';
+  if (document.getElementById('ecm-water'))    document.getElementById('ecm-water').value    = reconVol  || '';
+  if (document.getElementById('ecm-reminder')) document.getElementById('ecm-reminder').value = foundItem ? (foundItem.reminder_time || '') : '';
   modal.classList.add('open');
 }
 
@@ -953,6 +957,7 @@ async function saveEditCompoundModal() {
   var vial  = document.getElementById('ecm-vial')  ? parseFloat(document.getElementById('ecm-vial').value)  || null : null;
   var water = document.getElementById('ecm-water') ? parseFloat(document.getElementById('ecm-water').value) || null : null;
   try {
+    const reminder = document.getElementById('ecm-reminder') ? document.getElementById('ecm-reminder').value || null : null;
     await PUT('/api/protocols/items/' + itemId, {
       dose_mg:         dose,
       timing:          timing || null,
@@ -960,6 +965,7 @@ async function saveEditCompoundModal() {
       route:           route,
       vial_size_mg:    vial,
       recon_volume_ml: water,
+      reminder_time:   reminder,
     });
     closeEditCompoundModal();
     loadProtocol();
@@ -1205,6 +1211,33 @@ function renderProfile(el, profile, patientId) {
   html += '<div id="pw-flash" class="flash-msg"></div>';
   html += '</div></div>';
 
+  html += '<div class="section-label" style="margin-top:16px">Notifications</div>';
+  html += '<div class="card"><div class="card-body">';
+  html += '<div class="field"><label>Your timezone</label>';
+  html += '<select id="prof-timezone" onchange="saveTimezone(this.value)">';
+  html += '<option value="-5"' + (profile.timezone_offset === -5 ? ' selected' : '') + '>Eastern (UTC-5 / EST)</option>';
+  html += '<option value="-4"' + (profile.timezone_offset === -4 ? ' selected' : '') + '>Eastern Daylight (UTC-4 / EDT)</option>';
+  html += '<option value="-6"' + (profile.timezone_offset === -6 ? ' selected' : '') + '>Central (UTC-6 / CST)</option>';
+  html += '<option value="-5.0"' + (profile.timezone_offset === -5.0 ? ' selected' : '') + '>Central Daylight (UTC-5 / CDT)</option>';
+  html += '<option value="-7"' + (profile.timezone_offset === -7 ? ' selected' : '') + '>Mountain (UTC-7 / MST)</option>';
+  html += '<option value="-6.0"' + (profile.timezone_offset === -6.0 ? ' selected' : '') + '>Mountain Daylight (UTC-6 / MDT)</option>';
+  html += '<option value="-8"' + (profile.timezone_offset === -8 ? ' selected' : '') + '>Pacific (UTC-8 / PST)</option>';
+  html += '<option value="-7.0"' + (profile.timezone_offset === -7.0 ? ' selected' : '') + '>Pacific Daylight (UTC-7 / PDT)</option>';
+  html += '<option value="-9"' + (profile.timezone_offset === -9 ? ' selected' : '') + '>Alaska (UTC-9)</option>';
+  html += '<option value="-10"' + (profile.timezone_offset === -10 ? ' selected' : '') + '>Hawaii (UTC-10)</option>';
+  html += '<option value="0"' + (profile.timezone_offset === 0 ? ' selected' : '') + '>UTC</option>';
+  html += '<option value="1"' + (profile.timezone_offset === 1 ? ' selected' : '') + '>UTC+1</option>';
+  html += '<option value="2"' + (profile.timezone_offset === 2 ? ' selected' : '') + '>UTC+2</option>';
+  html += '</select></div>';
+  html += '<div style="font-size:11px;color:var(--muted);margin-top:6px">Set this so reminder times match your local time.</div>';
+  html += '<div id="tz-flash" class="flash-msg"></div>';
+  html += '</div></div>';
+  html += '<div class="section-label" style="margin-top:16px">Notifications</div>';
+  html += '<div class="card"><div class="card-body">';
+  html += '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Enable push notifications to receive dose reminders.</div>';
+  html += '<button class="btn btn-primary" onclick="enableNotifications()">Enable notifications</button>';
+  html += '<div id="notif-flash" class="flash-msg"></div>';
+  html += '</div></div>';
   html += '<div class="section-label" style="margin-top:16px">Account</div>';
   html += '<div class="card"><div class="card-body">';
   html += '<button class="btn btn-danger" onclick="logout()">Sign out</button>';
@@ -1224,6 +1257,13 @@ async function saveProfile(patientId) {
     });
     flash('prof-flash', '✓ Profile saved');
   } catch (err) { flash('prof-flash', err.message, true); }
+}
+
+async function saveTimezone(val) {
+  try {
+    await PUT('/api/profile/' + S.userId, { timezone_offset: parseFloat(val) });
+    flash('tz-flash', '✓ Timezone saved');
+  } catch (err) { flash('tz-flash', err.message, true); }
 }
 
 async function changeUsername() {
@@ -1813,6 +1853,47 @@ async function skipOnboarding() {
 /* ══════════════════════════════════════════
    PUSH NOTIFICATIONS
 ══════════════════════════════════════════ */
+async function enableNotifications() {
+  flash('notif-flash', 'Starting...');
+  if (!('serviceWorker' in navigator)) { flash('notif-flash', 'No SW support', true); return; }
+  if (!('PushManager' in window)) { flash('notif-flash', 'No PushManager', true); return; }
+  try {
+    flash('notif-flash', 'Requesting permission...');
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') { flash('notif-flash', 'Permission: ' + permission, true); return; }
+    flash('notif-flash', 'Getting SW...');
+    let reg = null;
+    try {
+      const swRegs = await navigator.serviceWorker.getRegistrations();
+      if (swRegs.length > 0) {
+        reg = swRegs[0];
+      } else {
+        reg = await navigator.serviceWorker.register('/static/sw.js');
+        await new Promise(function(resolve) { setTimeout(resolve, 1000); });
+      }
+    } catch(swErr) {
+      flash('notif-flash', 'SW error: ' + swErr.message, true);
+      return;
+    }
+    if (!reg) { flash('notif-flash', 'No SW registration', true); return; }
+    flash('notif-flash', 'Getting VAPID key...');
+    const keyData = await GET('/api/push/vapid-public-key');
+    if (!keyData.key) { flash('notif-flash', 'No VAPID key', true); return; }
+    flash('notif-flash', 'Subscribing...');
+    let sub = await reg.pushManager.getSubscription();
+    if (sub) await sub.unsubscribe();
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(keyData.key),
+    });
+    flash('notif-flash', 'Saving subscription...');
+    await savePushSubscription(sub);
+    flash('notif-flash', 'Notifications enabled!');
+  } catch (err) {
+    flash('notif-flash', 'Error: ' + err.message, true);
+  }
+}
+
 async function initPushNotifications() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   try {

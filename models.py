@@ -22,6 +22,7 @@ class User(UserMixin, db.Model):
     active        = db.Column(db.Boolean,     default=True)
     invite_code   = db.Column(db.String(20),  unique=True, nullable=True)
     onboarding_complete = db.Column(db.Boolean, default=False)
+    timezone_offset = db.Column(db.Float, default=-5.0)
     created_at    = db.Column(db.DateTime,    default=datetime.utcnow)
     # Relationships
     protocols  = db.relationship("Protocol",  backref="patient",       lazy=True, foreign_keys="Protocol.patient_id",       cascade="all, delete-orphan")
@@ -63,6 +64,7 @@ class User(UserMixin, db.Model):
             "notes":        self.notes,
             "active":       self.active,
             "onboarding_complete": self.onboarding_complete,
+            "timezone_offset": self.timezone_offset if self.timezone_offset is not None else -5.0,
             "created_at":   self.created_at.isoformat(),
         }
 

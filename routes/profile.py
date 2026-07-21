@@ -3,10 +3,7 @@ from flask_login import login_required, current_user
 from extensions import db
 from models import User, WeightLog, DiaryEntry
 from datetime import date, datetime
-
 profile_bp = Blueprint("profile", __name__)
-
-
 # ── Profile ────────────────────────────────────────────
 @profile_bp.route("/<int:patient_id>", methods=["GET"])
 @login_required
@@ -16,7 +13,6 @@ def get_profile(patient_id):
     patient = User.query.get_or_404(patient_id)
     return jsonify(patient.to_dict()), 200
 
-
 @profile_bp.route("/<int:patient_id>", methods=["PUT"])
 @login_required
 def update_profile(patient_id):
@@ -24,7 +20,6 @@ def update_profile(patient_id):
         return jsonify({"error": "Unauthorized"}), 403
     patient = User.query.get_or_404(patient_id)
     data = request.get_json()
-
     for field in ("first_name", "last_name", "goals", "notes", "email", "sex"):
         if field in data:
             setattr(patient, field, data[field] or None)
@@ -32,7 +27,8 @@ def update_profile(patient_id):
         patient.height_in = float(data["height_in"]) if data["height_in"] else None
     if "date_of_birth" in data and data["date_of_birth"]:
         patient.date_of_birth = date.fromisoformat(data["date_of_birth"])
-
+    if "timezone_offset" in data and data["timezone_offset"] is not None:
+        patient.timezone_offset = float(data["timezone_offset"])
     db.session.commit()
     return jsonify(patient.to_dict()), 200
 
@@ -59,7 +55,6 @@ def log_weight(patient_id):
         weight_lbs=float(data["weight_lbs"]),
         notes=data.get("notes"),
     )
-    # Update profile weight too
     patient = User.query.get(patient_id)
     if patient:
         patient.weight_lbs = float(data["weight_lbs"])
