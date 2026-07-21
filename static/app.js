@@ -1213,30 +1213,23 @@ function renderProfile(el, profile, patientId) {
 
   html += '<div class="section-label" style="margin-top:16px">Notifications</div>';
   html += '<div class="card"><div class="card-body">';
-  html += '<div class="field"><label>Your timezone</label>';
+  html += '<div class="field"><label>Timezone</label>';
   html += '<select id="prof-timezone" onchange="saveTimezone(this.value)">';
   html += '<option value="-5"' + (profile.timezone_offset === -5 ? ' selected' : '') + '>Eastern (UTC-5 / EST)</option>';
   html += '<option value="-4"' + (profile.timezone_offset === -4 ? ' selected' : '') + '>Eastern Daylight (UTC-4 / EDT)</option>';
   html += '<option value="-6"' + (profile.timezone_offset === -6 ? ' selected' : '') + '>Central (UTC-6 / CST)</option>';
-  html += '<option value="-5.0"' + (profile.timezone_offset === -5.0 ? ' selected' : '') + '>Central Daylight (UTC-5 / CDT)</option>';
   html += '<option value="-7"' + (profile.timezone_offset === -7 ? ' selected' : '') + '>Mountain (UTC-7 / MST)</option>';
-  html += '<option value="-6.0"' + (profile.timezone_offset === -6.0 ? ' selected' : '') + '>Mountain Daylight (UTC-6 / MDT)</option>';
   html += '<option value="-8"' + (profile.timezone_offset === -8 ? ' selected' : '') + '>Pacific (UTC-8 / PST)</option>';
-  html += '<option value="-7.0"' + (profile.timezone_offset === -7.0 ? ' selected' : '') + '>Pacific Daylight (UTC-7 / PDT)</option>';
   html += '<option value="-9"' + (profile.timezone_offset === -9 ? ' selected' : '') + '>Alaska (UTC-9)</option>';
   html += '<option value="-10"' + (profile.timezone_offset === -10 ? ' selected' : '') + '>Hawaii (UTC-10)</option>';
   html += '<option value="0"' + (profile.timezone_offset === 0 ? ' selected' : '') + '>UTC</option>';
   html += '<option value="1"' + (profile.timezone_offset === 1 ? ' selected' : '') + '>UTC+1</option>';
   html += '<option value="2"' + (profile.timezone_offset === 2 ? ' selected' : '') + '>UTC+2</option>';
   html += '</select></div>';
-  html += '<div style="font-size:11px;color:var(--muted);margin-top:6px">Set this so reminder times match your local time.</div>';
-  html += '<div id="tz-flash" class="flash-msg"></div>';
-  html += '</div></div>';
-  html += '<div class="section-label" style="margin-top:16px">Notifications</div>';
-  html += '<div class="card"><div class="card-body">';
-  html += '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Enable push notifications to receive dose reminders.</div>';
-  html += '<button class="btn btn-primary" onclick="enableNotifications()">Enable notifications</button>';
+  html += '<div style="font-size:11px;color:var(--muted);margin:6px 0 14px">Set your timezone so reminders fire at the right local time.</div>';
+  html += '<button class="btn btn-primary" onclick="enableNotifications()">Enable push notifications</button>';
   html += '<div id="notif-flash" class="flash-msg"></div>';
+  html += '<div id="tz-flash" class="flash-msg"></div>';
   html += '</div></div>';
   html += '<div class="section-label" style="margin-top:16px">Account</div>';
   html += '<div class="card"><div class="card-body">';
@@ -1854,43 +1847,29 @@ async function skipOnboarding() {
    PUSH NOTIFICATIONS
 ══════════════════════════════════════════ */
 async function enableNotifications() {
-  flash('notif-flash', 'Starting...');
-  if (!('serviceWorker' in navigator)) { flash('notif-flash', 'No SW support', true); return; }
-  if (!('PushManager' in window)) { flash('notif-flash', 'No PushManager', true); return; }
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    flash('notif-flash', 'Push notifications not supported on this device', true);
+    return;
+  }
   try {
-    flash('notif-flash', 'Requesting permission...');
     const permission = await Notification.requestPermission();
-    if (permission !== 'granted') { flash('notif-flash', 'Permission: ' + permission, true); return; }
-    flash('notif-flash', 'Getting SW...');
-    let reg = null;
-    try {
-      const swRegs = await navigator.serviceWorker.getRegistrations();
-      if (swRegs.length > 0) {
-        reg = swRegs[0];
-      } else {
-        reg = await navigator.serviceWorker.register('/static/sw.js');
-        await new Promise(function(resolve) { setTimeout(resolve, 1000); });
-      }
-    } catch(swErr) {
-      flash('notif-flash', 'SW error: ' + swErr.message, true);
+    if (permission !== 'granted') {
+      flash('notif-flash', 'Permission denied — enable in Settings', true);
       return;
     }
-    if (!reg) { flash('notif-flash', 'No SW registration', true); return; }
-    flash('notif-flash', 'Getting VAPID key...');
+    const reg = await navigator.serviceWorker.ready;
     const keyData = await GET('/api/push/vapid-public-key');
-    if (!keyData.key) { flash('notif-flash', 'No VAPID key', true); return; }
-    flash('notif-flash', 'Subscribing...');
+    if (!keyData.key) { flash('notif-flash', 'Server config error', true); return; }
     let sub = await reg.pushManager.getSubscription();
     if (sub) await sub.unsubscribe();
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(keyData.key),
     });
-    flash('notif-flash', 'Saving subscription...');
     await savePushSubscription(sub);
-    flash('notif-flash', 'Notifications enabled!');
+    flash('notif-flash', '✓ Notifications enabled!');
   } catch (err) {
-    flash('notif-flash', 'Error: ' + err.message, true);
+    flash('notif-flash', err.message, true);
   }
 }
 
