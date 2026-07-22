@@ -50,6 +50,16 @@ function fmtDay() {
 function fmtMonthDay() {
   return new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 }
+function fmt12hr(hhmm) {
+  if (!hhmm) return hhmm;
+  var parts = hhmm.split(':');
+  var h = parseInt(parts[0]);
+  var m = parts[1];
+  var ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return h + ':' + m + ' ' + ampm;
+}
+
 function fmtNum(n, dec) {
   if (dec === undefined) dec = 1;
   if (n == null) return '—';
@@ -332,6 +342,119 @@ function switchTodayTab(name, btn) {
   if (name === 'history') loadHistory(0);
 }
 
+function showAddPastDoseModal(dateStr) {
+  var modal = document.getElementById('add-past-dose-modal');
+  document.getElementById('apd-date').value    = dateStr;
+  document.getElementById('apd-date-label').textContent = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  document.getElementById('apd-dose').value    = '';
+  document.getElementById('apd-flash').textContent = '';
+  // Populate compound select from active protocols
+  var select = document.getElementById('apd-compound');
+  select.innerHTML = '';
+  var items = [];
+  (S.protocols || []).filter(function(p) { return p.active; }).forEach(function(proto) {
+    (proto.items || []).filter(function(i) { return i.active; }).forEach(function(item) {
+      items.push(item);
+    });
+  });
+  items.forEach(function(item) {
+    var unit = (item.notes && item.notes.startsWith('unit:')) ? item.notes.split(':')[1] : 'mg';
+    var opt = document.createElement('option');
+    opt.value = item.id + '|' + item.dose_mg + '|' + unit;
+    opt.textContent = item.compound_name + ' (' + item.dose_mg + ' ' + unit + ')';
+    select.appendChild(opt);
+  });
+  // Pre-fill dose from selected compound
+  if (items.length) {
+    var parts = select.value.split('|');
+    document.getElementById('apd-dose').value = parts[1] || '';
+    document.getElementById('apd-unit').textContent = parts[2] || 'mg';
+  }
+  modal.classList.add('open');
+}
+
+function closeAddPastDoseModal() {
+  var modal = document.getElementById('add-past-dose-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function onApdCompoundChange() {
+  var select = document.getElementById('apd-compound');
+  var parts = select.value.split('|');
+  document.getElementById('apd-dose').value = parts[1] || '';
+  document.getElementById('apd-unit').textContent = parts[2] || 'mg';
+}
+
+async function saveAddPastDose() {
+  var dateStr  = document.getElementById('apd-date').value;
+  var selVal   = document.getElementById('apd-compound').value;
+  var parts    = selVal.split('|');
+  var itemId   = parseInt(parts[0]);
+  var dose     = parseFloat(document.getElementById('apd-dose').value);
+  if (isNaN(dose) || dose <= 0) { flash('apd-flash', 'Enter a valid dose', true); return; }
+  try {
+    await POST('/api/doses/log-past', {
+      protocol_item_id: itemId,
+      dose_mg_taken:    dose,
+      local_date:       dateStr,
+    });
+    closeAddPastDoseModal();
+    loadHistory(HISTORY_OFFSET);
+  } catch (err) { flash('apd-flash', err.message, true); }
+}
+
+function showAddPastDoseModal(dateStr) {
+  var modal = document.getElementById('add-past-dose-modal');
+  if (!modal) return;
+  document.getElementById('apd-date').value = dateStr;
+  document.getElementById('apd-date-label').textContent = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  document.getElementById('apd-dose').value = '';
+  document.getElementById('apd-flash').textContent = '';
+  var select = document.getElementById('apd-compound');
+  select.innerHTML = '';
+  var firstDose = '';
+  var firstUnit = 'mg';
+  (S.protocols || []).filter(function(p) { return p.active; }).forEach(function(proto) {
+    (proto.items || []).filter(function(i) { return i.active; }).forEach(function(item) {
+      var unit = (item.notes && item.notes.startsWith('unit:')) ? item.notes.split(':')[1] : 'mg';
+      var opt = document.createElement('option');
+      opt.value = item.id + '|' + item.dose_mg + '|' + unit;
+      opt.textContent = item.compound_name + ' (' + item.dose_mg + ' ' + unit + ')';
+      select.appendChild(opt);
+      if (!firstDose) { firstDose = item.dose_mg; firstUnit = unit; }
+    });
+  });
+  document.getElementById('apd-dose').value = firstDose || '';
+  document.getElementById('apd-unit').textContent = firstUnit;
+  modal.classList.add('open');
+}
+
+function closeAddPastDoseModal() {
+  var modal = document.getElementById('add-past-dose-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function onApdCompoundChange() {
+  var select = document.getElementById('apd-compound');
+  var parts = select.value.split('|');
+  document.getElementById('apd-dose').value = parts[1] || '';
+  document.getElementById('apd-unit').textContent = parts[2] || 'mg';
+}
+
+async function saveAddPastDose() {
+  var dateStr = document.getElementById('apd-date').value;
+  var selVal  = document.getElementById('apd-compound').value;
+  var parts   = selVal.split('|');
+  var itemId  = parseInt(parts[0]);
+  var dose    = parseFloat(document.getElementById('apd-dose').value);
+  if (isNaN(dose) || dose <= 0) { flash('apd-flash', 'Enter a valid dose', true); return; }
+  try {
+    await POST('/api/doses/log-past', { protocol_item_id: itemId, dose_mg_taken: dose, local_date: dateStr });
+    closeAddPastDoseModal();
+    loadHistory(HISTORY_OFFSET);
+  } catch (err) { flash('apd-flash', err.message, true); }
+}
+
 async function loadHistory(offset) {
   HISTORY_OFFSET = offset || 0;
   const panel = document.getElementById('today-history-panel');
@@ -372,7 +495,10 @@ function renderHistory(panel, logs, offset) {
     const dayLogs = byDate[d];
     const dateStr = new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     html += '<div class="history-date-group">';
+    html += '<div class="history-date-label-row">';
     html += '<div class="history-date-label">' + dateStr + '</div>';
+    html += '<button class="history-add-btn" data-date="' + d + '" onclick="showAddPastDoseModal(this.getAttribute(\'data-date\'))">+ Add</button>';
+    html += '</div>';
     dayLogs.forEach(function(log) {
       const unit = log.compound_name ? '' : '';
       html += '<div class="history-entry" data-log-id="' + log.id + '">';
@@ -452,7 +578,8 @@ function renderToday(el, protocols, takenIds, skippedIds) {
     if (!proto.items) return;
     proto.items.forEach(function(item) {
       if (!item.active) return;
-      const nonSpecific = ['Daily','Weekly','Twice daily','3x/week','Monthly','As needed'];
+      if (item.frequency === 'As needed') return;
+      const nonSpecific = ['Daily','Weekly','Twice daily','3x/week','Monthly'];
       if (item.frequency && !nonSpecific.includes(item.frequency)) {
         const days = item.frequency.split(',').map(function(d) { return d.trim(); });
         if (days.length && /^[A-Z][a-z]{2}/.test(days[0]) && !days.includes(todayDay)) return;
@@ -495,6 +622,71 @@ function renderToday(el, protocols, takenIds, skippedIds) {
 
   // Unscheduled section
   html += renderUnscheduledSection(protocols);
+
+  // Tomorrow's schedule
+  var tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  var tomorrowDay = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][tomorrow.getDay()];
+  var tomorrowItems = [];
+  var nonSpecific = ['Daily','Weekly','Twice daily','3x/week','Monthly','As needed'];
+  protocols.forEach(function(proto) {
+    if (!proto.items) return;
+    proto.items.forEach(function(item) {
+      if (!item.active) return;
+      if (item.frequency && !nonSpecific.includes(item.frequency)) {
+        var tDays = item.frequency.split(',').map(function(d) { return d.trim(); });
+        if (!tDays.includes(tomorrowDay)) return;
+      }
+      tomorrowItems.push(item);
+    });
+  });
+  if (tomorrowItems.length) {
+    html += '<div class="tomorrow-section">';
+    html += '<div class="tomorrow-label">Tomorrow</div>';
+    tomorrowItems.forEach(function(item) {
+      var doseUnit = (item.notes && item.notes.startsWith('unit:')) ? item.notes.split(':')[1] : 'mg';
+      html += '<div class="tomorrow-item">';
+      html += '<div class="tomorrow-item-name">' + item.compound_name + '</div>';
+      html += '<div class="tomorrow-item-detail">' + item.dose_mg + ' ' + doseUnit;
+      if (item.route)         html += ' · ' + item.route;
+      if (item.reminder_time) html += ' · 🔔 ' + fmt12hr(item.reminder_time);
+      html += '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  // Tomorrow's schedule
+  var tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  var tomorrowDay = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][tomorrow.getDay()];
+  var tomorrowItems = [];
+  var nonSpecTomorrow = ['Daily','Weekly','Twice daily','3x/week','Monthly'];
+  protocols.forEach(function(proto) {
+    if (!proto.items) return;
+    proto.items.forEach(function(item) {
+      if (!item.active) return;
+      if (item.frequency === 'As needed') return;
+      if (item.frequency && !nonSpecTomorrow.includes(item.frequency)) {
+        var tDays = item.frequency.split(',').map(function(d) { return d.trim(); });
+        if (!tDays.includes(tomorrowDay)) return;
+      }
+      tomorrowItems.push(item);
+    });
+  });
+  if (tomorrowItems.length) {
+    html += '<div class="tomorrow-section">';
+    html += '<div class="tomorrow-label">Tomorrow</div>';
+    tomorrowItems.forEach(function(item) {
+      var doseUnit = (item.notes && item.notes.startsWith('unit:')) ? item.notes.split(':')[1] : 'mg';
+      html += '<div class="tomorrow-item">';
+      html += '<div class="tomorrow-item-name">' + item.compound_name + '</div>';
+      html += '<div class="tomorrow-item-detail">' + item.dose_mg + ' ' + doseUnit;
+      if (item.route)         html += ' · ' + item.route;
+      if (item.reminder_time) html += ' · 🔔 ' + fmt12hr(item.reminder_time);
+      html += '</div></div>';
+    });
+    html += '</div>';
+  }
 
   el.innerHTML = html;
 }
@@ -701,7 +893,7 @@ function renderProtocolCard(proto, patientId) {
       if (item.frequency)     html += ' · ' + item.frequency;
       if (item.route)         html += ' · ' + item.route;
       if (item.timing)        html += ' · ' + item.timing;
-      if (item.reminder_time) html += ' · 🔔 ' + item.reminder_time;
+      if (item.reminder_time) html += ' · 🔔 ' + fmt12hr(item.reminder_time);
       html += '</div>';
       if (item.dose_units) {
         html += '<div style="font-family:var(--mono);font-size:11px;color:var(--accent);background:rgba(0,229,212,0.08);padding:2px 8px;border-radius:4px;margin-top:5px;display:inline-block">💉 ' + item.dose_units + ' units</div>';
@@ -1947,6 +2139,12 @@ document.addEventListener('DOMContentLoaded', function() {
   if (epModal) {
     epModal.addEventListener('click', function(e) {
       if (e.target === epModal) closeEditProtocolModal();
+    });
+  }
+  var apdModal = document.getElementById('add-past-dose-modal');
+  if (apdModal) {
+    apdModal.addEventListener('click', function(e) {
+      if (e.target === apdModal) closeAddPastDoseModal();
     });
   }
 });

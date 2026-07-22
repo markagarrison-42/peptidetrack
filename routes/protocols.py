@@ -78,6 +78,10 @@ def add_item(protocol_id):
 @login_required
 def update_item(item_id):
     item = ProtocolItem.query.get_or_404(item_id)
+    # Security check: ensure item belongs to current user's protocol
+    if current_user.role == 'patient' and item.protocol.patient_id != current_user.id:
+        from flask import jsonify
+        return jsonify({"error": "Unauthorized"}), 403
     data = request.get_json()
     for field in ("frequency", "route", "timing", "phase", "notes", "reminder_time"):
         if field in data:
@@ -119,6 +123,9 @@ def update_item(item_id):
 @login_required
 def delete_item(item_id):
     item = ProtocolItem.query.get_or_404(item_id)
+    if current_user.role == 'patient' and item.protocol.patient_id != current_user.id:
+        from flask import jsonify
+        return jsonify({"error": "Unauthorized"}), 403
     db.session.delete(item)
     db.session.commit()
     return jsonify({"message": "Deleted"}), 200

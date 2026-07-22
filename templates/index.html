@@ -452,12 +452,13 @@
     }
 
     .dose-check-symbol {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       color: var(--border2);
       line-height: 1;
       transition: color 0.2s;
       font-family: var(--sans);
+      pointer-events: none;
     }
 
     .dose-check:not(.checked) .dose-check-symbol {
@@ -465,13 +466,17 @@
     }
 
     .dose-check.checked {
-      background: var(--grad-primary);
+      background: linear-gradient(135deg, #00e5d4, #7c5fe6);
       border-color: transparent;
-      box-shadow: 0 0 14px rgba(0,229,212,0.3);
+      box-shadow: 0 0 18px rgba(0,229,212,0.4);
+      width: 44px;
+      height: 44px;
     }
 
     .dose-check.checked .dose-check-symbol {
       color: #07040f;
+      font-size: 16px;
+      font-weight: 900;
     }
 
     .dose-info { flex: 1; min-width: 0; }
@@ -694,6 +699,7 @@
       max-width: 480px;
       max-height: 85vh;
       overflow-y: auto;
+      overflow-x: hidden;
       background: var(--surface2);
       border: 1px solid var(--border2);
       border-radius: 24px 24px 0 0;
@@ -740,7 +746,8 @@
 
     .dose-modal-input-wrap input {
       flex: 1;
-      background: var(--surface);
+      flex: 1;
+      min-width: 0;
       border: 1px solid var(--border2);
       border-radius: var(--r);
       color: var(--text);
@@ -1934,6 +1941,61 @@
       font-size: 20px;
     }
 
+
+    /* ── TOMORROW SECTION ── */
+    .tomorrow-section {
+      margin: 8px 20px 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+    }
+    .tomorrow-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 12px 16px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tomorrow-item {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tomorrow-item:last-child { border-bottom: none; }
+    .tomorrow-item-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .tomorrow-item-detail {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ── HISTORY DATE HEADER ROW ── */
+    .history-date-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .history-add-btn {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      background: none;
+      border: 1px solid rgba(0,229,212,0.3);
+      border-radius: 6px;
+      padding: 3px 10px;
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+
   </style>
 </head>
 <body>
@@ -2111,6 +2173,28 @@
 
 
 
+
+<!-- ── ADD PAST DOSE MODAL ── -->
+<div id="add-past-dose-modal" class="dose-modal">
+  <div class="dose-modal-sheet">
+    <div class="dose-modal-handle"></div>
+    <div class="dose-modal-title" id="apd-date-label">Date</div>
+    <div class="dose-modal-sub">Log a missed dose</div>
+    <input type="hidden" id="apd-date">
+    <div class="field" style="margin-bottom:12px">
+      <label>Compound</label>
+      <select id="apd-compound" onchange="onApdCompoundChange()"></select>
+    </div>
+    <div class="dose-modal-input-wrap" style="margin-bottom:16px">
+      <input type="number" id="apd-dose" inputmode="decimal" step="0.01" placeholder="0">
+      <span class="dose-modal-unit" id="apd-unit">mg</span>
+    </div>
+    <div id="apd-flash" class="flash-msg"></div>
+    <button class="btn btn-primary" onclick="saveAddPastDose()" style="margin-top:4px">Log dose</button>
+    <button class="btn btn-ghost" onclick="closeAddPastDoseModal()" style="margin-top:8px">Cancel</button>
+  </div>
+</div>
+
 <!-- ── EDIT COMPOUND MODAL ── -->
 <div id="edit-compound-modal" class="dose-modal">
   <div class="dose-modal-sheet">
@@ -2231,13 +2315,6 @@
 <input type="file" id="quick-photo-input" accept="image/*" capture="user">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/static/sw.js")
-      .then(function(reg) { console.log("SW registered"); })
-      .catch(function(err) { console.error("SW failed", err); });
-  }
-</script>
-<script src="/static/app.js?v=13"></script>
+<script src="/static/app.js?v=3"></script>
 </body>
 </html>

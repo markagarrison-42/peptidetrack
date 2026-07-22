@@ -20,7 +20,11 @@ def get_for_patient(patient_id):
 @login_required
 def today():
     patient_id = current_user.id
-    today_date = date.today()
+    local_date_str = request.args.get('local_date')
+    try:
+        today_date = date.fromisoformat(local_date_str) if local_date_str else date.today()
+    except ValueError:
+        today_date = date.today()
     logs = DoseLog.query.filter_by(patient_id=patient_id, date=today_date).all()
     taken_ids   = [l.protocol_item_id for l in logs if not l.skipped]
     skipped_ids = [l.protocol_item_id for l in logs if l.skipped]
@@ -32,7 +36,11 @@ def today():
 def toggle():
     data = request.get_json()
     item_id    = int(data["protocol_item_id"])
-    today_date = date.today()
+    local_date_str = data.get("local_date")
+    try:
+        today_date = date.fromisoformat(local_date_str) if local_date_str else date.today()
+    except ValueError:
+        today_date = date.today()
     patient_id = current_user.id
 
     item = ProtocolItem.query.get_or_404(item_id)
@@ -97,10 +105,15 @@ def log_unscheduled():
     today_date = date.today()
     patient_id = current_user.id
     item = ProtocolItem.query.get_or_404(item_id)
+    local_date_str = data.get("local_date")
+    try:
+        log_date = date.fromisoformat(local_date_str) if local_date_str else today_date
+    except ValueError:
+        log_date = today_date
     log = DoseLog(
         patient_id=patient_id,
         protocol_item_id=item_id,
-        date=today_date,
+        date=log_date,
         dose_mg_taken=float(data.get("dose_mg_taken") or item.dose_mg),
         notes=data.get("notes"),
         off_schedule=True,
@@ -151,6 +164,39 @@ def delete_log(log_id):
     db.session.commit()
     return jsonify({"deleted": True}), 200
 
+
+
+@doses_bp.route("/log-past", methods=["POST"])
+@login_required
+def log_past():
+    data = request.get_json()
+    item_id = int(data["protocol_item_id"])
+    local_date_str = data.get("local_date")
+    try:
+        log_date = date.fromisoformat(local_date_str) if local_date_str else date.today()
+    except ValueError:
+        log_date = date.today()
+    patient_id = current_user.id
+    item = ProtocolItem.query.get_or_404(item_id)
+    # Remove any existing log for that date
+    existing = DoseLog.query.filter_by(
+        patient_id=patient_id,
+        protocol_item_id=item_id,
+        date=log_date,
+    ).first()
+    if existing:
+        db.session.delete(existing)
+    log = DoseLog(
+        patient_id=patient_id,
+        protocol_item_id=item_id,
+        date=log_date,
+        dose_mg_taken=float(data.get("dose_mg_taken") or item.dose_mg),
+        notes=data.get("notes"),
+        off_schedule=False,
+    )
+    db.session.add(log)
+    db.session.commit()
+    return jsonify({"logged": True, "date": log_date.isoformat()}), 201
 
 @doses_bp.route("/adherence/<int:patient_id>", methods=["GET"])
 @login_required
