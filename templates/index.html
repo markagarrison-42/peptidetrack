@@ -439,7 +439,7 @@
     .dose-check {
       width: 44px;
       height: 44px;
-      border-radius: 50%;
+      border-radius: 10px;
       border: 2px solid var(--border2);
       background: transparent;
       display: flex;
@@ -467,10 +467,9 @@
 
     .dose-check.checked {
       background: linear-gradient(135deg, #00e5d4, #7c5fe6);
-      border-color: transparent;
-      box-shadow: 0 0 18px rgba(0,229,212,0.4);
-      width: 44px;
-      height: 44px;
+      border: none;
+      box-shadow: 0 0 14px rgba(0,229,212,0.35);
+      border-radius: 10px;
     }
 
     .dose-check.checked .dose-check-symbol {

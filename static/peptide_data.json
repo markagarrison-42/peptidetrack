@@ -1,0 +1,758 @@
+[
+  {
+    "name": "5-Amino-1MQ",
+    "dosage": "50-100 mg per dose",
+    "frequency": "Once or twice daily",
+    "route": "Oral",
+    "notes": "NNMT inhibitor for fat loss and metabolic enhancement. Oral capsules 50-100 mg 1-2x/day. Cycle 4-8 weeks. May support weight loss, muscle preservation, and energy. Limited human clinical data; based on research and community protocols."
+  },
+  {
+    "name": "ACE-031 (ACVR2B-Fc)",
+    "dosage": "1-3 mg/kg",
+    "frequency": "Every 2-4 weeks",
+    "route": "Subcutaneous",
+    "notes": "Myostatin inhibitor fusion protein (ActRIIB decoy receptor). Clinical trial doses in muscular dystrophy were 1-3 mg/kg. Caused nosebleeds and gum bleeding in trials due to off-target activin effects. Very limited safe human dosing data."
+  },
+  {
+    "name": "AICAR",
+    "dosage": "1000\u20133000 mcg (1\u20133 mg)",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "50 mg vial reconstituted with 3.0 mL bacteriostatic water yields ~16.7 mg/mL. WADA-prohibited in sport. Monitor kidney function. Cycle no longer than 14 days; 1\u20132 month washout before repeating. Research use only."
+  },
+  {
+    "name": "AOD-9604",
+    "dosage": "250-300 mcg per injection",
+    "frequency": "Once daily, in the morning on empty stomach",
+    "route": "Subcutaneous injection",
+    "notes": "Fragment of HGH (amino acids 176-191) modified for fat loss. Mimics lipolytic effects without affecting IGF-1 or blood glucose. Take 30 minutes before food or exercise. Cycle 3-6 months."
+  },
+  {
+    "name": "ARA-290",
+    "dosage": "4-8 mg per injection",
+    "frequency": "Once daily for 28-day course",
+    "route": "Subcutaneous injection",
+    "notes": "Innate Repair Receptor agonist derived from EPO. Used for neuropathic pain, sarcoidosis, and metabolic syndrome. Clinical trials: 4 mg SC daily for 28 days. Anti-inflammatory and tissue-protective without erythropoietic effects."
+  },
+  {
+    "name": "Abaloparatide",
+    "dosage": "80 mcg per injection",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "FDA-approved PTHrP analogue (Tymlos) for postmenopausal osteoporosis. Standard dose: 80 mcg/day SC into periumbilical abdomen. Maximum treatment duration: 2 years. Similar mechanism to teriparatide. Rotate injection sites within abdominal area."
+  },
+  {
+    "name": "Adamax",
+    "dosage": "500\u20131000 mcg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "Gradual titration recommended; 10 mg vial reconstituted with 3.0 mL bacteriostatic water yields ~3.33 mg/mL. Adamantane-modified Semax analog studied for nootropic/neuroprotective properties. Research use only."
+  },
+  {
+    "name": "Adipotide",
+    "dosage": "250 mcg escalating by 250 mcg every 2 weeks",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "Starting dose 250 mcg; 10 mg vial reconstituted to ~3.33 mg/mL. Clinical development discontinued due to reversible kidney toxicity at higher doses. Research use only."
+  },
+  {
+    "name": "Angiotensin 1-7",
+    "dosage": "100-600 mcg/kg per day",
+    "frequency": "Continuous infusion or multiple daily injections",
+    "route": "Subcutaneous or Intravenous",
+    "notes": "Counter-regulatory arm of renin-angiotensin system. Cardioprotective, vasodilatory, and anti-fibrotic. Cyclic form (cAng 1-7) has oral bioavailability. Research and clinical trial stage. Doses extrapolated from animal studies."
+  },
+  {
+    "name": "BPC-157",
+    "dosage": "250-500 mcg per injection",
+    "frequency": "Once or twice daily",
+    "route": "Subcutaneous or intramuscular injection; oral capsules also used for gut issues",
+    "notes": "Commonly used for healing injuries, gut health, and inflammation. Inject near site of injury when possible. Typical cycle is 4-6 weeks. Oral dosing ranges 500-1000 mcg/day for GI conditions."
+  },
+  {
+    "name": "Bremelanotide",
+    "dosage": "1.75 mg per dose",
+    "frequency": "As needed, 45 minutes before sexual activity",
+    "route": "Subcutaneous injection",
+    "notes": "FDA-approved (Vyleesi) for hypoactive sexual desire disorder in premenopausal women. Max 1 dose per 24 hours, max 1x per week recommended. Common side effects: nausea, flushing, headache. Consider antiemetic pretreatment."
+  },
+  {
+    "name": "Bremelanotide (PT-141)",
+    "dosage": "1.75 mg per dose",
+    "frequency": "As needed, no more than once per 24 hours and no more than 1x/week",
+    "route": "Subcutaneous (abdomen)",
+    "notes": "FDA-approved for hypoactive sexual desire disorder in women at 1.75 mg. Administer 45 minutes before sexual activity. Off-label male use: 0.5-2 mg. Nausea and flushing common; antiemetic pretreatment may help. Transient blood pressure increase expected."
+  },
+  {
+    "name": "CJC-1295",
+    "dosage": "100-200 mcg per injection",
+    "frequency": "Once daily, typically at bedtime",
+    "route": "Subcutaneous injection",
+    "notes": "Non-DAC version (without Drug Affinity Complex). Short half-life (~30 min). Often combined with Ipamorelin in a 1:1 ratio. Stimulates GH pulse mimicking natural release. Cycle 8-12 weeks."
+  },
+  {
+    "name": "CJC-1295 DAC",
+    "dosage": "1-2 mg per injection",
+    "frequency": "Once weekly",
+    "route": "Subcutaneous injection",
+    "notes": "DAC version has extended half-life of 6-8 days due to Drug Affinity Complex. Causes sustained GH elevation rather than pulsatile release. Some prefer non-DAC for more natural GH patterns. Cycle 8-12 weeks."
+  },
+  {
+    "name": "Cagrilintide",
+    "dosage": "0.6\u20134.5 mg",
+    "frequency": "Once weekly",
+    "route": "Subcutaneous injection",
+    "notes": "Gradual titration over 4\u20136 weeks from 0.25 mg/week up to 4.5 mg/week (or 2.4 mg/week in CagriSema combination protocols). Long-acting amylin analogue. GI side effects common during titration. Research use only."
+  },
+  {
+    "name": "Cartalax",
+    "dosage": "2000\u20135000 mcg (2\u20135 mg)",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "20 mg vial reconstituted with 3.0 mL bacteriostatic water yields ~6.67 mg/mL. Khavinson bioregulator tripeptide (Ala-Glu-Asp). Typically used in 10\u201320 day courses; repeat every 4\u20136 months. Limited human clinical data. Research use only."
+  },
+  {
+    "name": "Cerebrolysin",
+    "dosage": "20\u201332 mg",
+    "frequency": "Once or twice daily",
+    "route": "Subcutaneous injection",
+    "notes": "60 mg vial reconstituted with 3.0 mL bacteriostatic water yields 20 mg/mL. Doses exceeding 100 units (1.0 mL) should be split into AM and PM administrations. Porcine brain-derived neuropeptide mixture. Research use only."
+  },
+  {
+    "name": "Chonluten",
+    "dosage": "250\u20134000 mcg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "20 mg vial reconstituted with 3.0 mL bacteriostatic water yields 6.67 mg/mL. Gradual titration over 8\u201316 weeks. Bioregulatory tripeptide (Glu-Asp-Gly) studied for bronchopulmonary tissue support. Research use only."
+  },
+  {
+    "name": "Colivelin",
+    "dosage": "0.1-1 mcg per injection",
+    "frequency": "Daily or several times weekly",
+    "route": "Subcutaneous injection or intranasal",
+    "notes": "Neuroprotective peptide combining ADNF and humanin. Extremely potent; active at very low doses (nanomolar range). Used for Alzheimer's, neurodegeneration, and cognitive enhancement. Very limited human data; dosing largely based on animal studies."
+  },
+  {
+    "name": "Cortagen",
+    "dosage": "1000\u20132000 mcg (1\u20132 mg)",
+    "frequency": "Once daily (morning preferred)",
+    "route": "Subcutaneous injection",
+    "notes": "20 mg vial reconstituted with 3.0 mL bacteriostatic water yields ~6.67 mg/mL. Khavinson bioregulator tetrapeptide (Ala-Glu-Asp-Pro) studied for neuroprotection and nerve regeneration. Research use only."
+  },
+  {
+    "name": "DSIP",
+    "dosage": "100-500 mcg per injection",
+    "frequency": "Once daily at bedtime",
+    "route": "Subcutaneous injection or intranasal",
+    "notes": "Delta sleep-inducing peptide. Promotes slow-wave sleep and has stress-reducing properties. Low-dose 100 mcg for sleep support; higher doses up to 500 mcg for more pronounced effects. Cycle 2-4 weeks."
+  },
+  {
+    "name": "Desmopressin",
+    "dosage": "0.1-0.4 mg oral; 10-40 mcg intranasal; 1-4 mcg injectable",
+    "frequency": "Once daily at bedtime or as directed",
+    "route": "Oral, intranasal, or subcutaneous/IV injection",
+    "notes": "Synthetic ADH analogue. FDA-approved for diabetes insipidus, nocturia, and hemophilia A. Oral: 0.1-0.4 mg/day. Intranasal: 10-40 mcg. Injectable: 1-4 mcg/day. Monitor for hyponatremia. Limit fluid intake."
+  },
+  {
+    "name": "Desmopressin (DDAVP)",
+    "dosage": "Intranasal: 10-40 mcg; Oral: 0.1-0.4 mg; Injectable: 2-4 mcg",
+    "frequency": "Once or twice daily depending on indication",
+    "route": "Intranasal, Oral, or Subcutaneous/IV",
+    "notes": "Synthetic vasopressin analogue. Used for diabetes insipidus, nocturnal enuresis, and hemophilia. Cognitive/nootropic off-label use at 2.5-10 mcg intranasally. Risk of hyponatremia; limit fluid intake after dosing."
+  },
+  {
+    "name": "Dihexa",
+    "dosage": "10-20 mg per dose",
+    "frequency": "2-3 times weekly",
+    "route": "Oral or transdermal",
+    "notes": "Potent nootropic and cognitive enhancer acting on HGF/MET pathway. Oral doses 10-20 mg; transdermal application also effective. Extremely potent; reportedly 7 orders of magnitude more potent than BDNF. Use caution; limited human safety data."
+  },
+  {
+    "name": "Epitalon",
+    "dosage": "5-10 mg per injection",
+    "frequency": "Once daily for 10-20 day course",
+    "route": "Subcutaneous or intramuscular injection; intranasal also used",
+    "notes": "Telomerase activator and anti-aging peptide. Typical protocol: 5-10 mg/day for 10-20 days, repeated 2x per year. Intranasal: 15-30 mcg/day. Studied for longevity, pineal gland function, and immune modulation."
+  },
+  {
+    "name": "Epithalon",
+    "dosage": "5-10 mg per injection",
+    "frequency": "Once daily for 10-20 day course",
+    "route": "Subcutaneous or intramuscular injection; intranasal also used",
+    "notes": "Same as Epitalon (alternate spelling/name). Tetrapeptide Ala-Glu-Asp-Gly. Protocol: 5-10 mg/day for 10-20 consecutive days, 2 courses per year. Associated with telomere elongation and anti-aging effects."
+  },
+  {
+    "name": "FOXO4-DRI",
+    "dosage": "250\u2013500 mcg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "10 mg vial reconstituted with 3.0 mL bacteriostatic water yields ~3.33 mg/mL. Gradual titration over 16 weeks. Senolytic peptide; no human clinical data exist. Preclinical evidence only from mouse studies. Research use only."
+  },
+  {
+    "name": "Follistatin 344",
+    "dosage": "50-100 mcg per injection",
+    "frequency": "Once daily for 10-30 day cycle",
+    "route": "Subcutaneous or intramuscular injection",
+    "notes": "Myostatin and activin inhibitor promoting muscle growth. Typical cycle: 50-100 mcg/day for 10-30 days. Cycle no more than 1-2 times per year due to potential long-term effects on reproductive hormones and tissue overgrowth risk."
+  },
+  {
+    "name": "Fragment 176-191",
+    "dosage": "250-500 mcg per injection",
+    "frequency": "Once or twice daily, on empty stomach",
+    "route": "Subcutaneous injection",
+    "notes": "C-terminal fragment of HGH for fat loss. Administer in fasted state (morning or before exercise) for best results. Does not affect blood glucose or IGF-1 levels. Cycle 3-6 months. Often combined with CJC-1295/Ipamorelin."
+  },
+  {
+    "name": "Fragment 176-191 (HGH Frag)",
+    "dosage": "250-500 mcg per dose",
+    "frequency": "2-3 times daily; optimal timing: fasted morning, pre-workout, pre-sleep",
+    "route": "Subcutaneous",
+    "notes": "C-terminal fragment of HGH targeting fat metabolism without IGF-1 mediated growth effects. Best administered in fasted state. Avoid carbohydrates around dosing window. Typical cycle 8-12 weeks. No effect on blood glucose unlike full HGH."
+  },
+  {
+    "name": "GHK-Cu",
+    "dosage": "1-2 mg per injection or topical cream",
+    "frequency": "Once daily for injectable; topical applied 1-2x daily",
+    "route": "Subcutaneous injection or topical",
+    "notes": "Copper peptide with regenerative, anti-aging, and wound-healing properties. Injectable: 1-2 mg/day SC. Topical formulations widely available for skin. Promotes collagen, elastin, and tissue remodeling. Cycle 4-8 weeks."
+  },
+  {
+    "name": "GHRP-2",
+    "dosage": "100-300 mcg per injection",
+    "frequency": "2-3 times daily",
+    "route": "Subcutaneous injection",
+    "notes": "Potent GH secretagogue. Increases cortisol and prolactin more than Ipamorelin. Strong appetite stimulation. Take on empty stomach. Commonly combined with a GHRH peptide for synergy. Cycle 8-12 weeks."
+  },
+  {
+    "name": "GHRP-6",
+    "dosage": "100-300 mcg per injection",
+    "frequency": "2-3 times daily",
+    "route": "Subcutaneous injection",
+    "notes": "Causes significant hunger/appetite stimulation via ghrelin pathway. Useful for those looking to increase appetite and muscle mass. Some cortisol and prolactin elevation. Take on empty stomach. Cycle 8-12 weeks."
+  },
+  {
+    "name": "Glutathione",
+    "dosage": "100\u2013200 mg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "600 mg vial reconstituted with 2.0 mL bacteriostatic water yields 300 mg/mL. Cycle 4\u20138 weeks; optional 2\u20134 week off-cycle. Relatively unstable once reconstituted\u2014use within 2\u20133 weeks. Research use only."
+  },
+  {
+    "name": "Gonadorelin",
+    "dosage": "50\u2013250 mcg per injection",
+    "frequency": "2\u20133 times weekly",
+    "route": "Subcutaneous injection",
+    "notes": "2 mg vial reconstituted with 2.0 mL bacteriostatic water yields 1 mg/mL. Synthetic GnRH; stimulates LH/FSH pulsatile release to restore HPG axis. Used alongside TRT to maintain testicular function. Research use only."
+  },
+  {
+    "name": "HCG",
+    "dosage": "500\u20132500 IU per injection",
+    "frequency": "3 times weekly",
+    "route": "Subcutaneous injection",
+    "notes": "Standard maintenance: 500 IU per injection (1,500 IU/week); high-dose recovery: 1,500\u20132,500 IU per injection. 5000 IU vial reconstituted with 2.0 mL bacteriostatic water. Protocol duration 8\u201316 weeks. Monitor testosterone and estradiol. Research use only."
+  },
+  {
+    "name": "HGH 191AA",
+    "dosage": "200\u2013900 mcg (approximately 0.6\u20132.7 IU)",
+    "frequency": "Once daily",
+    "route": "Subcutaneous or intramuscular injection",
+    "notes": "10 IU vial reconstituted with 1 mL bacteriostatic water yields 10 IU/mL. Monitor fasting glucose at doses \u22652 IU/day. WADA-prohibited in sport. Store lyophilized at \u221220\u00b0C; refrigerate reconstituted at 2\u20138\u00b0C for up to 14 days. Research use only."
+  },
+  {
+    "name": "HMG",
+    "dosage": "75\u2013150 IU per injection",
+    "frequency": "3 times weekly",
+    "route": "Subcutaneous injection",
+    "notes": "75 IU (0.15 mg) vial typically reconstituted in 1 mL diluent for 75 IU/mL. Contains 1:1 blend of FSH and LH. Used alongside HCG for spermatogenesis support. Medical supervision required. Research use only."
+  },
+  {
+    "name": "Hexarelin",
+    "dosage": "100-200 mcg per injection",
+    "frequency": "2-3 times daily",
+    "route": "Subcutaneous injection",
+    "notes": "Most potent GHRP. Associated with desensitization with prolonged use; cycle 4-6 weeks on, 4 weeks off. Elevates cortisol and prolactin. Also has cardioprotective properties. Take on empty stomach."
+  },
+  {
+    "name": "Humanin",
+    "dosage": "2-4 mg per injection",
+    "frequency": "3 times weekly",
+    "route": "Subcutaneous injection",
+    "notes": "Mitochondrial-derived peptide with neuroprotective and metabolic benefits. Research doses: 2-4 mg SC 3x/week. Associated with IGF-1 pathway. Anti-apoptotic and cytoprotective properties. Limited human clinical data."
+  },
+  {
+    "name": "IGF-1 DES",
+    "dosage": "50-150 mcg per injection",
+    "frequency": "Once daily post-workout",
+    "route": "Intramuscular injection (into target muscle)",
+    "notes": "Truncated IGF-1 analogue ~10x more potent than IGF-1 LR3. Very short half-life (~20-30 min). Inject intramuscularly into target muscle for localized effects. Start at 50 mcg; max 150 mcg/injection. Cycle 4 weeks maximum."
+  },
+  {
+    "name": "IGF-1 DES (Des(1-3)IGF-1)",
+    "dosage": "50-150 mcg per dose",
+    "frequency": "Once daily or split twice daily",
+    "route": "Subcutaneous or Intramuscular (into target tissue)",
+    "notes": "Truncated IGF-1 with 10x higher potency than standard IGF-1 LR3. Does not bind IGF binding proteins. Very short half-life (20-30 min). Inject into target muscle for localized effects. Risk of hypoglycemia; have glucose source available. Cycle 4-6 weeks."
+  },
+  {
+    "name": "IGF-1 LR3",
+    "dosage": "20-80 mcg per injection",
+    "frequency": "Once daily post-workout",
+    "route": "Subcutaneous or intramuscular injection",
+    "notes": "Long-acting IGF-1 analogue with ~20-hour half-life. Start at 20-40 mcg/day and assess response. Cycle maximum 4-6 weeks due to receptor desensitization. Risk of hypoglycemia; take with food. Used for muscle growth and recovery."
+  },
+  {
+    "name": "IGF-2 (Insulin-like Growth Factor 2)",
+    "dosage": "20-60 mcg per day",
+    "frequency": "Once daily",
+    "route": "Subcutaneous",
+    "notes": "Acts on IGF-1R and IGF-2R; important in muscle memory and satellite cell activation. May enhance recovery of previously trained muscle. Less hypoglycemic risk than IGF-1 DES. Limited human dosing data. Research peptide status."
+  },
+  {
+    "name": "Ipamorelin",
+    "dosage": "100-300 mcg per injection",
+    "frequency": "2-3 times daily or once at bedtime",
+    "route": "Subcutaneous injection",
+    "notes": "Selective GHRP with minimal cortisol/prolactin release. Commonly stacked with CJC-1295 or Mod GRF 1-29 for synergistic GH release. Take on empty stomach for best results. Cycle 8-12 weeks."
+  },
+  {
+    "name": "KPV",
+    "dosage": "200\u2013500 mcg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "10 mg vial reconstituted with 3.0 mL bacteriostatic water yields ~3.33 mg/mL. Anti-inflammatory tripeptide (C-terminal fragment of alpha-MSH). Generally well tolerated; no melanotropic effects. Research use only."
+  },
+  {
+    "name": "Kisspeptin",
+    "dosage": "100\u2013200 mcg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "10 mg vial reconstituted with 3.0 mL bacteriostatic water yields ~3.33 mg/mL. Upstream trigger of the GnRH/LH/FSH reproductive hormone cascade via GPR54 receptor. Studied for IVF/ovulation induction. Tachyphylaxis risk with prolonged continuous exposure. Research use only."
+  },
+  {
+    "name": "Kisspeptin-10",
+    "dosage": "50-100 mcg per injection",
+    "frequency": "Once daily or pulsatile",
+    "route": "Subcutaneous injection or intravenous (clinical)",
+    "notes": "Stimulates GnRH release and downstream LH/FSH/testosterone. Off-label use for hypogonadism and fertility. Doses 50-100 mcg SC. Clinical studies use IV. Emerging use in reproductive medicine. Limited human data on optimal protocols."
+  },
+  {
+    "name": "Kisspeptin-54",
+    "dosage": "1 nmol/kg for IV bolus; 0.1-1 mcg/kg for subcutaneous",
+    "frequency": "Varies by protocol; typically pulsatile every 90 minutes in research settings",
+    "route": "Intravenous or Subcutaneous",
+    "notes": "GnRH secretagogue used in fertility research and hypogonadotropic hypogonadism. Pulsatile administration mimics physiological signaling. Continuous infusion leads to desensitization. Limited clinical data; primarily investigational."
+  },
+  {
+    "name": "Klotho (Klotho Peptide Fragment)",
+    "dosage": "10-30 mcg per kg body weight",
+    "frequency": "Once or twice weekly",
+    "route": "Intravenous or Subcutaneous",
+    "notes": "Anti-aging protein associated with longevity, cognitive function, and kidney protection. Extremely limited human data. Most data from animal studies. Handle with care; cold-chain storage required."
+  },
+  {
+    "name": "L-Carnitine",
+    "dosage": "50\u2013100 mg (advanced protocols up to 200 mg)",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "200 mg vial reconstituted with 2.0 mL bacteriostatic water yields 100 mg/mL. Subcutaneous route bypasses gut bacterial TMAO production associated with oral dosing. Supports fat oxidation and exercise performance. Research use only."
+  },
+  {
+    "name": "LL-37",
+    "dosage": "50\u2013400 mcg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "5 mg vial reconstituted to ~1.67 mg/mL. Endogenous human cathelicidin antimicrobial peptide studied for immune modulation and wound healing. Research use only."
+  },
+  {
+    "name": "Larazotide",
+    "dosage": "0.5-1 mg per dose",
+    "frequency": "Three times daily before meals",
+    "route": "Oral",
+    "notes": "Tight junction regulator (zonulin antagonist) for leaky gut and celiac disease. Clinical trials used 0.5-2 mg three times daily before meals. Reduces intestinal permeability. Off-label compounded use for gut health and autoimmune conditions."
+  },
+  {
+    "name": "Larazotide (AT-1001)",
+    "dosage": "0.25-1 mg per dose",
+    "frequency": "Three times daily, 30 minutes before meals",
+    "route": "Oral",
+    "notes": "Tight junction regulator used for leaky gut and celiac disease management. Take on empty stomach before meals. Clinical trials used 0.5 mg three times daily. May help with intestinal permeability disorders."
+  },
+  {
+    "name": "Livagen",
+    "dosage": "500 mcg\u20132 mg (standard); up to 10 mg for intensive 10-day courses",
+    "frequency": "Once daily or 5 days/week",
+    "route": "Subcutaneous injection",
+    "notes": "20 mg vial reconstituted with 3.0 mL bacteriostatic water yields ~6.67 mg/mL. Cycle 2\u20138 weeks standard; intensive reset 10\u201314 days. Khavinson tetrapeptide bioregulator studied for epigenetic modulation and enkephalin-degrading enzyme inhibition. Research use only."
+  },
+  {
+    "name": "MGF",
+    "dosage": "200\u2013500 mcg",
+    "frequency": "2\u20133 times weekly (post-workout)",
+    "route": "Subcutaneous or intramuscular injection",
+    "notes": "5 mg vial. Mechano growth factor (IGF-1 splice variant). Inject near target muscle post-training for localized effects. Short half-life (~minutes); PEG-MGF preferred for systemic/longer-acting protocols. Research use only."
+  },
+  {
+    "name": "MK-677",
+    "dosage": "10-25 mg per day",
+    "frequency": "Once daily",
+    "route": "Oral",
+    "notes": "Oral ghrelin mimetic / GH secretagogue. Not a peptide injection. Start at 10 mg/day, increase to 25 mg if tolerated. Common side effects: water retention, increased appetite, fatigue initially. Cycle 3-6 months."
+  },
+  {
+    "name": "MOTS-C",
+    "dosage": "200\u20131000 mcg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "Gradual titration over ~10 weeks. Multiple vial sizes (5, 10, 20, 40 mg). Mitochondria-derived peptide that activates AMPK pathways. No completed human clinical trials. Use reconstituted solution within 7 days for best potency. Research use only."
+  },
+  {
+    "name": "Mazdutide",
+    "dosage": "2.5\u20136 mg (5 mg vial) or 2.5\u20135 mg (10 mg vial)",
+    "frequency": "Once weekly",
+    "route": "Subcutaneous injection",
+    "notes": "Gradual titration required. 5 mg vial: reconstitute with 3.0 mL \u2192 1.67 mg/mL; 10 mg vial: reconstitute with 3.0 mL \u2192 3.33 mg/mL. Dual GLP-1/glucagon receptor agonist. Approved in China for obesity; investigational elsewhere. Research use only."
+  },
+  {
+    "name": "Mechano Growth Factor (MGF)",
+    "dosage": "200-400 mcg per dose",
+    "frequency": "Post-exercise, 2-3 times per week",
+    "route": "Intramuscular (into exercised muscle) or Subcutaneous",
+    "notes": "Splice variant of IGF-1 released in response to mechanical stress. Very short half-life (minutes); PEG-MGF has extended half-life. Inject into trained muscle within 30 minutes post-exercise. Typically cycled 4-8 weeks. Often stacked with IGF-1 LR3 sequentially."
+  },
+  {
+    "name": "Melanotan I (Afamelanotide)",
+    "dosage": "16 mg implant or 0.5-1 mg injectable per day",
+    "frequency": "Implant every 2 months; Injectable daily for 10 days then as needed",
+    "route": "Subcutaneous implant or injection",
+    "notes": "Non-selective melanocortin agonist for skin tanning and photoprotection. Licensed as implant (Scenesse) for erythropoietic protoporphyria. Less sexual side effects than Melanotan II. Nausea, flushing, and darkening of existing moles reported."
+  },
+  {
+    "name": "Melanotan II",
+    "dosage": "250 mcg loading, titrating to ~1000 mcg; 250\u2013500 mcg maintenance",
+    "frequency": "Daily during loading (4\u20138 weeks); 2\u20133 times weekly for maintenance",
+    "route": "Subcutaneous injection",
+    "notes": "10 mg vial reconstituted with 3.0 mL \u2192 ~3.33 mg/mL. Non-selective melanocortin receptor agonist; promotes skin tanning, sexual arousal, appetite suppression. Side effects include nausea, facial flushing, spontaneous erections. Research use only."
+  },
+  {
+    "name": "Mod GRF 1-29",
+    "dosage": "100-200 mcg per injection",
+    "frequency": "2-3 times daily or once at bedtime",
+    "route": "Subcutaneous injection",
+    "notes": "Modified CJC-1295 without DAC. Stimulates natural pulsatile GH release. Half-life ~30 minutes. Typically paired with a GHRP (Ipamorelin, GHRP-2, etc.) in a 1:1 ratio. Administer on empty stomach. Cycle 8-12 weeks."
+  },
+  {
+    "name": "Mod GRF 1-29 (CJC-1295 without DAC)",
+    "dosage": "100-200 mcg per dose",
+    "frequency": "2-3 times daily; often combined with a GHRP",
+    "route": "Subcutaneous",
+    "notes": "Modified GHRH analogue with approximately 30-minute half-life. Synergistic with GHRPs (GHRP-2, GHRP-6, Ipamorelin). Best dosed fasted and before sleep. Typical stacking dose 100 mcg Mod GRF + 100 mcg GHRP. Cycle 3-6 months on, 1-2 months off."
+  },
+  {
+    "name": "N-Acetyl Epithalon Amidate",
+    "dosage": "5-10 mg per injection",
+    "frequency": "Once daily for 10-20 consecutive days, 2 times per year",
+    "route": "Subcutaneous or Intramuscular",
+    "notes": "Acetylated and amidated form of Epithalon (Epitalon) for enhanced stability and bioavailability. Telomerase activator with proposed anti-aging effects. More potent than standard Epithalon on molar basis."
+  },
+  {
+    "name": "NAD+",
+    "dosage": "250-1000 mg per infusion; 25-50 mg subcutaneous",
+    "frequency": "IV: 1-3x weekly; SC: once daily",
+    "route": "Intravenous infusion or subcutaneous injection",
+    "notes": "Nicotinamide adenine dinucleotide. IV infusions at 250-1000 mg over several hours. Subcutaneous 25-50 mg/day as maintenance. Used for energy, anti-aging, addiction recovery. IV may cause chest tightness; slow infusion rate."
+  },
+  {
+    "name": "Ovagen",
+    "dosage": "Per protocol (typically 1\u20132 mg daily based on Khavinson bioregulator class)",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "20 mg vial. Ovarian tissue-derived bioregulatory peptide from the Khavinson class. Used to support female reproductive/ovarian function. Specific dosage data from peptidedosages.com protocol page not publicly indexed; dose extrapolated from bioregulator class norms. Research use only."
+  },
+  {
+    "name": "Oxyntomodulin",
+    "dosage": "400-800 mcg per injection",
+    "frequency": "Three times daily before meals",
+    "route": "Subcutaneous injection",
+    "notes": "Dual GLP-1/glucagon agonist for weight loss. Clinical research doses: 400-800 mcg SC before meals. Reduces appetite and increases energy expenditure. Not commercially available; research/compounded only. Limited long-term data."
+  },
+  {
+    "name": "Oxytocin",
+    "dosage": "10\u201340 IU",
+    "frequency": "As needed or daily",
+    "route": "Subcutaneous injection or intranasal",
+    "notes": "5 mg and 10 mg vials available on peptidedosages.com. Intranasal: typically 24\u201332 IU daily in clinical studies. Subcutaneous research protocols follow reconstituted vial approach. Social bonding/anxiolytic peptide. Research use only."
+  },
+  {
+    "name": "P21 Peptide",
+    "dosage": "5-10 mg per day",
+    "frequency": "Once daily for 30 days",
+    "route": "Intranasal",
+    "notes": "Nootropic peptide targeting BDNF pathways. May support neurogenesis and synaptic plasticity. Very limited human data. Intranasal route preferred for CNS penetration. Cycle on for 30 days, off for 30 days."
+  },
+  {
+    "name": "PACAP (Pituitary Adenylate Cyclase-Activating Peptide)",
+    "dosage": "100-300 mcg per dose",
+    "frequency": "Once daily or every other day",
+    "route": "Intranasal or Subcutaneous",
+    "notes": "Neuroprotective peptide related to VIP. May support cognitive function, neural repair, and metabolic regulation. Limited human dosing data. Headache reported at higher doses. Start low and titrate."
+  },
+  {
+    "name": "PDA",
+    "dosage": "200-400 mcg per injection",
+    "frequency": "Once or twice daily",
+    "route": "Subcutaneous injection",
+    "notes": "Proline-rich Decapeptide Analogue. Healing and anti-inflammatory peptide. Often used similarly to BPC-157 for gut and injury repair. Typical dose 200-400 mcg once or twice daily. Limited published human data; dosing based on community protocols."
+  },
+  {
+    "name": "PE-22-28",
+    "dosage": "50\u2013200 mcg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "10 mg vial reconstituted to 3.33 mg/mL. Spadin analog; TREK-1 potassium channel blocker studied for rapid-onset antidepressant and neurogenic effects. Limited human data; research stage compound. Research use only."
+  },
+  {
+    "name": "PEG MGF",
+    "dosage": "200\u2013500 mcg",
+    "frequency": "2\u20133 times weekly",
+    "route": "Subcutaneous or intramuscular injection",
+    "notes": "2 mg vial reconstituted to ~0.667 mg/mL. Pegylated mechano growth factor with extended half-life (24\u201348+ hours vs. ~minutes for native MGF). Inject post-workout; cycle to prevent receptor downregulation. Research use only."
+  },
+  {
+    "name": "PEG-MGF",
+    "dosage": "200-400 mcg per injection",
+    "frequency": "2-3 times weekly",
+    "route": "Subcutaneous or intramuscular injection",
+    "notes": "PEGylated Mechano Growth Factor. Extended half-life (~48-72 hours) vs MGF. Promotes muscle repair, satellite cell activation, and hypertrophy. Administer post-workout. Cycle 4-6 weeks. Lower frequency than non-PEG MGF."
+  },
+  {
+    "name": "PNC-27",
+    "dosage": "Per protocol (research-stage; no established human dose)",
+    "frequency": "Per protocol",
+    "route": "Subcutaneous injection",
+    "notes": "30 mg vial. Selective anticancer peptide studied for its ability to induce apoptosis in cancer cell membranes. Very limited human data. 30 mg vial per peptidedosages.com directory. Research use only."
+  },
+  {
+    "name": "PT-141",
+    "dosage": "1.75 mg (1750 mcg)",
+    "frequency": "On-demand (\u226545 minutes before activity); approximately 1 dose per week maximum",
+    "route": "Subcutaneous injection",
+    "notes": "10 mg vial reconstituted with 3.0 mL \u2192 ~3.33 mg/mL. Bremelanotide; melanocortin MC3R/MC4R agonist for sexual dysfunction. Short-term room-temperature stability (~3 weeks if needed). Research use only."
+  },
+  {
+    "name": "Pinealon",
+    "dosage": "100\u2013300 mcg (typical Khavinson bioregulator dosing)",
+    "frequency": "Once daily (morning or early afternoon preferred)",
+    "route": "Subcutaneous injection",
+    "notes": "20 mg vial. Standard cycles 10\u201320 days; may extend to 28 days. Neuroprotective tripeptide (Glu-Asp-Arg) from the pineal gland bioregulator class; studied for cognitive and antioxidant effects. May cause slight initial sedation. Research use only."
+  },
+  {
+    "name": "Pramlintide",
+    "dosage": "15-120 mcg per injection",
+    "frequency": "Before major meals (3x daily)",
+    "route": "Subcutaneous injection",
+    "notes": "FDA-approved amylin analogue for Type 1 and Type 2 diabetes. T1D: 15-60 mcg before meals; T2D: 60-120 mcg before meals. Start low and titrate. Must reduce insulin dose by 50% when starting. Side effect: nausea."
+  },
+  {
+    "name": "Pramlintide (Symlin)",
+    "dosage": "Type 1 DM: 15 mcg before meals, titrate to 30-60 mcg; Type 2 DM: 60 mcg before meals, titrate to 120 mcg",
+    "frequency": "Before each major meal",
+    "route": "Subcutaneous (abdomen or thigh)",
+    "notes": "Amylin analogue. Reduce insulin dose by 50% when initiating. Do not mix with insulin in same syringe. Inject at separate site from insulin. Nausea common initially; titrate slowly. Monitor glucose closely."
+  },
+  {
+    "name": "Prostamax",
+    "dosage": "Per label/prescription (typically 1\u20132 mg daily)",
+    "frequency": "Once daily (morning with food preferred)",
+    "route": "Subcutaneous injection or oral (capsule formulations exist)",
+    "notes": "20 mg vial. Bovine prostatic tissue-derived bioregulatory peptide. Repeat courses every 3\u20136 months. PSA monitoring recommended. No reconstitution required for some pre-measured formulations. Research use only."
+  },
+  {
+    "name": "Retatrutide",
+    "dosage": "2\u20138 mg",
+    "frequency": "Once weekly",
+    "route": "Subcutaneous injection",
+    "notes": "Gradual escalation over 8\u201312 weeks; phase 2 trials showed up to 24% weight loss at 12 mg/week. Multiple vial sizes (5, 10, 20, 30 mg). Triple GLP-1/GIP/glucagon receptor agonist. Investigational compound. Research use only."
+  },
+  {
+    "name": "SLU-PP-332",
+    "dosage": "1.25\u20132.5 mg",
+    "frequency": "Once daily (split into two divided doses in murine studies)",
+    "route": "Subcutaneous injection",
+    "notes": "5 mg vial reconstituted with 3.0 mL \u2192 1.67 mg/mL. Pan-ERR agonist (ERR\u03b1/\u03b2/\u03b3) exercise mimetic; evidence base is preclinical only (mouse models). No human clinical trials. Not a peptide\u2014small organic molecule. Research use only."
+  },
+  {
+    "name": "SNAP-8",
+    "dosage": "330 mcg\u20131 mg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection (also used topically in cosmetic formulations)",
+    "notes": "10 mg vial reconstituted to 3.33 mg/mL. Octapeptide analog of SNAP-25 studied for wrinkle reduction by inhibiting catecholamine release at neuromuscular junctions. Research use only."
+  },
+  {
+    "name": "SS-31",
+    "dosage": "1-5 mg per injection",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "Mitochondria-targeted antioxidant peptide (Elamipretide). Research doses range 1-5 mg/day SC. Used for mitochondrial dysfunction, heart failure, and anti-aging. Mostly research-stage; off-label compounded use."
+  },
+  {
+    "name": "Selank",
+    "dosage": "300\u2013500 mcg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection (also used intranasally in published clinical research)",
+    "notes": "5 mg or 10 mg vials; reconstituted to 1.67 mg/mL (5 mg) or 3.33 mg/mL (10 mg) with 3.0 mL bacteriostatic water. Synthetic tuftsin heptapeptide analog with anxiolytic effects comparable to benzodiazepines in Russian trials, without sedation. Research use only."
+  },
+  {
+    "name": "Semaglutide",
+    "dosage": "Starting dose 0.25 mg, titrating up to 1-2.4 mg",
+    "frequency": "Once weekly",
+    "route": "Subcutaneous injection",
+    "notes": "Begin at 0.25 mg/week for 4 weeks, increase to 0.5 mg for 4 weeks, then 1 mg. For weight loss, may titrate to 1.7 mg then 2.4 mg. GI side effects common during titration. Rotate injection sites."
+  },
+  {
+    "name": "Semax",
+    "dosage": "200\u2013500 mcg (5 mg vial) or 300\u2013800 mcg (10 mg vial)",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection or intranasal",
+    "notes": "5 mg vial: 3.0 mL \u2192 1.67 mg/mL; 10 mg vial: 3.0 mL \u2192 3.33 mg/mL. Titrate from 200\u2013300 mcg up to 400\u2013500 mcg over 5\u201312 weeks. ACTH(4-10) heptapeptide analog; studied for cognitive enhancement, cerebrovascular recovery, optic neuropathy. Research use only."
+  },
+  {
+    "name": "Sermorelin",
+    "dosage": "200-500 mcg per injection",
+    "frequency": "Once daily at bedtime",
+    "route": "Subcutaneous injection",
+    "notes": "GHRH analogue that stimulates natural GH release. Half-life is short (~10-20 min). Effects develop gradually over weeks. Often used for anti-aging and body composition. Cycle 3-6 months."
+  },
+  {
+    "name": "Survodutide",
+    "dosage": "600 mcg\u20136 mg",
+    "frequency": "Once weekly",
+    "route": "Subcutaneous injection",
+    "notes": "10 mg vial reconstituted with 2.0 mL bacteriostatic water yields 5 mg/mL. Gradual titration over 10\u201312 weeks. Dual GLP-1/glucagon receptor agonist (BI 456906). Phase 2 trials: 12.5\u201314.9% weight loss over 46 weeks. Research use only."
+  },
+  {
+    "name": "TB-4 Frag (Thymosin Beta-4 Fragment)",
+    "dosage": "200-300 mcg per injection",
+    "frequency": "Once daily or every other day",
+    "route": "Subcutaneous or Intramuscular",
+    "notes": "Active fragment of TB-4 (aa 17-23). Used for tissue repair and anti-inflammatory effects. Typical cycle 4-6 weeks. Lower cost alternative to full TB-4. Reconstitute with bacteriostatic water."
+  },
+  {
+    "name": "TB-500",
+    "dosage": "2-2.5 mg per injection",
+    "frequency": "Twice weekly for 4-6 weeks (loading), then once weekly or biweekly (maintenance)",
+    "route": "Subcutaneous or intramuscular injection",
+    "notes": "Often stacked with BPC-157 for synergistic healing. Loading phase: 4-6 weeks at higher frequency. Maintenance: 2-2.5 mg every 1-2 weeks. Systemic distribution makes injection site less critical."
+  },
+  {
+    "name": "Teriparatide",
+    "dosage": "20 mcg per injection",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "FDA-approved recombinant PTH(1-34) for osteoporosis. Standard dose: 20 mcg/day SC. Maximum treatment duration: 2 years lifetime due to osteosarcoma risk (seen in rats). Inject into thigh or abdomen. Increases bone density and reduces fracture risk."
+  },
+  {
+    "name": "Teriparatide (PTH 1-34)",
+    "dosage": "20 mcg per day",
+    "frequency": "Once daily",
+    "route": "Subcutaneous (abdomen or thigh)",
+    "notes": "FDA-approved for osteoporosis at 20 mcg/day. Maximum treatment duration 2 years due to osteosarcoma risk in animal studies. Rotate injection sites. Monitor calcium and serum PTH. Discontinue if hypercalcemia develops."
+  },
+  {
+    "name": "Tesamorelin",
+    "dosage": "1-2 mg per injection",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "FDA-approved for HIV-associated lipodystrophy at 2 mg/day. Off-label use for visceral fat reduction and cognitive benefits. Stable GHRH analogue. Cycle 3-6 months with reassessment."
+  },
+  {
+    "name": "Testagen",
+    "dosage": "100\u2013300 mcg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "20 mg vial reconstituted with 3.0 mL bacteriostatic water yields ~6.67 mg/mL. Khavinson tetrapeptide (Lys-Glu-Asp-Gly) anterior pituitary bioregulator. No human clinical trials exist. Research use only."
+  },
+  {
+    "name": "Thymalin",
+    "dosage": "5-10 mg per injection",
+    "frequency": "Once daily for 10-day course",
+    "route": "Intramuscular injection",
+    "notes": "Thymic peptide bioregulator. Typical protocol: 5-10 mg/day IM for 10 consecutive days, 1-2x per year. Immune modulation and thymic restoration. Part of Khavinson peptide series. Often combined with Epithalon for anti-aging protocols."
+  },
+  {
+    "name": "Thymogen (Glutamyl-Tryptophan)",
+    "dosage": "100 mcg per day",
+    "frequency": "Once daily for 10 days",
+    "route": "Intramuscular or intranasal",
+    "notes": "Dipeptide derived from thymosin alpha-1. Immunomodulatory effects. Nasal drops also used at 0.025% solution. Cycles typically repeated 2-4 times per year."
+  },
+  {
+    "name": "Thymosin Alpha-1",
+    "dosage": "1-1.6 mg per injection",
+    "frequency": "Twice weekly",
+    "route": "Subcutaneous injection",
+    "notes": "Immune modulator. FDA-approved in some countries for hepatitis and immune disorders. Typical protocol: 1.6 mg SC twice weekly for 6-12 weeks. Used for chronic infections, cancer support, and immune enhancement. Well-tolerated."
+  },
+  {
+    "name": "Thymosin Beta-4",
+    "dosage": "1-2 mg per injection",
+    "frequency": "2-3 times weekly",
+    "route": "Subcutaneous or intramuscular injection",
+    "notes": "Same active component as TB-500 (primary sequence fragment). Used for healing, inflammation, and cardiac protection. Standard protocol: 1-2 mg 2-3x/week for 4-6 weeks loading, then maintenance 1-2 mg/week."
+  },
+  {
+    "name": "Thymosin Beta-4 (TB-500)",
+    "dosage": "Loading phase: 2-2.5 mg twice weekly for 4-6 weeks; Maintenance: 1-2 mg twice monthly",
+    "frequency": "Twice weekly during loading; twice monthly for maintenance",
+    "route": "Subcutaneous or Intramuscular",
+    "notes": "Promotes wound healing, reduces inflammation, improves flexibility and recovery. Some protocols use 5 mg/week split into two doses. Systemic distribution allows injection away from injury site."
+  },
+  {
+    "name": "Thymulin (Facteur Thymique Serique)",
+    "dosage": "10-20 mcg per day",
+    "frequency": "Once daily for 10-20 days",
+    "route": "Subcutaneous",
+    "notes": "Zinc-dependent thymic hormone. Requires adequate zinc for activity. Anti-inflammatory and immunomodulatory. Research doses vary widely. Zinc supplementation may enhance efficacy."
+  },
+  {
+    "name": "Tirzepatide",
+    "dosage": "Starting dose 2.5 mg, titrating up to 5-15 mg",
+    "frequency": "Once weekly",
+    "route": "Subcutaneous injection",
+    "notes": "Begin at 2.5 mg/week for 4 weeks, increase by 2.5 mg increments every 4 weeks as tolerated. Max dose 15 mg/week. Dual GIP/GLP-1 agonist. Superior weight loss outcomes compared to semaglutide in trials."
+  },
+  {
+    "name": "Triptorelin",
+    "dosage": "0.1 mg per injection (PCT); 3.75 mg depot (clinical)",
+    "frequency": "Single injection for PCT; monthly or quarterly for clinical use",
+    "route": "Subcutaneous injection (low dose); intramuscular (depot formulation)",
+    "notes": "GnRH agonist. Single low-dose 0.1 mg injection used in PCT for HPTA restart. Clinical depot formulations (3.75 mg monthly) used for prostate cancer, endometriosis. PCT use: one-time injection. Paradoxically stimulates LH/FSH at low dose."
+  },
+  {
+    "name": "VIP",
+    "dosage": "50-100 mcg per dose",
+    "frequency": "Once or twice daily",
+    "route": "Intranasal",
+    "notes": "Vasoactive intestinal peptide. Used for CIRS (Chronic Inflammatory Response Syndrome), pulmonary hypertension, and neuroinflammation. Typical dose: 50 mcg intranasal 4x/day in clinical protocols (Shoemaker protocol). Anti-inflammatory properties."
+  },
+  {
+    "name": "VIP (Vasoactive Intestinal Peptide)",
+    "dosage": "50 mcg per dose",
+    "frequency": "4 times daily (every 6 hours) for 12 weeks",
+    "route": "Intranasal",
+    "notes": "Used in CIRS (Chronic Inflammatory Response Syndrome) protocols per Shoemaker protocol. Anti-inflammatory neuropeptide. Must rule out MARCoNS before use. Monitor VIP levels pre and post treatment."
+  },
+  {
+    "name": "Vesugen",
+    "dosage": "500 mcg\u20132 mg",
+    "frequency": "Once daily",
+    "route": "Subcutaneous injection",
+    "notes": "20 mg vial reconstituted with 3.0 mL bacteriostatic water yields ~6.67 mg/mL. Khavinson tripeptide (Lys-Glu-Asp / KED) vascular bioregulator. Studied for endothelial cell proliferation and SIRT-1 modulation. Research use only."
+  },
+  {
+    "name": "Vilon",
+    "dosage": "67\u2013670 mcg",
+    "frequency": "Once daily for 5 consecutive days per 4-week cycle (pulsed protocol)",
+    "route": "Subcutaneous injection",
+    "notes": "20 mg vial reconstituted with 3.0 mL bacteriostatic water yields ~6.67 mg/mL. Khavinson immunoregulatory dipeptide (Lys-Glu). Pulsed 5-days-on protocol per cycle. Studied for lymphocyte modulation and longevity biomarkers. Research use only."
+  }
+]

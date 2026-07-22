@@ -623,38 +623,7 @@ function renderToday(el, protocols, takenIds, skippedIds) {
   // Unscheduled section
   html += renderUnscheduledSection(protocols);
 
-  // Tomorrow's schedule
-  var tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  var tomorrowDay = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][tomorrow.getDay()];
-  var tomorrowItems = [];
-  var nonSpecific = ['Daily','Weekly','Twice daily','3x/week','Monthly','As needed'];
-  protocols.forEach(function(proto) {
-    if (!proto.items) return;
-    proto.items.forEach(function(item) {
-      if (!item.active) return;
-      if (item.frequency && !nonSpecific.includes(item.frequency)) {
-        var tDays = item.frequency.split(',').map(function(d) { return d.trim(); });
-        if (!tDays.includes(tomorrowDay)) return;
-      }
-      tomorrowItems.push(item);
-    });
-  });
-  if (tomorrowItems.length) {
-    html += '<div class="tomorrow-section">';
-    html += '<div class="tomorrow-label">Tomorrow</div>';
-    tomorrowItems.forEach(function(item) {
-      var doseUnit = (item.notes && item.notes.startsWith('unit:')) ? item.notes.split(':')[1] : 'mg';
-      html += '<div class="tomorrow-item">';
-      html += '<div class="tomorrow-item-name">' + item.compound_name + '</div>';
-      html += '<div class="tomorrow-item-detail">' + item.dose_mg + ' ' + doseUnit;
-      if (item.route)         html += ' · ' + item.route;
-      if (item.reminder_time) html += ' · 🔔 ' + fmt12hr(item.reminder_time);
-      html += '</div></div>';
-    });
-    html += '</div>';
-  }
-
+  el.innerHTML = html;
   // Tomorrow's schedule
   var tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
