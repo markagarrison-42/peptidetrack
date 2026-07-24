@@ -471,7 +471,8 @@ async function loadHistory(offset) {
 function renderHistory(panel, logs, offset) {
   const rangeStart = offset + 1;
   const rangeEnd   = offset + 30;
-  let html = '<div class="history-nav">';
+  let html = '<button class="history-add-any" onclick="showAddPastDoseModal(new Date().toLocaleDateString(\'en-CA\'))">+ Log a dose for another day</button>';
+  html += '<div class="history-nav">';
   html += '<button class="history-nav-btn" onclick="loadHistory(' + (offset + 30) + ')"' + (offset >= 60 ? ' disabled' : '') + '>← Older</button>';
   html += '<span class="history-nav-label">Days ' + rangeStart + '–' + rangeEnd + ' ago</span>';
   html += '<button class="history-nav-btn" onclick="loadHistory(' + Math.max(0, offset - 30) + ')"' + (offset === 0 ? ' disabled' : '') + '>Newer →</button>';
@@ -726,7 +727,7 @@ function renderUnscheduledSection(protocols) {
   protocols.filter(function(p) { return p.active; }).forEach(function(proto) {
     if (!proto.items) return;
     proto.items.forEach(function(item) {
-      if (!item.active) return;
+      // Include hidden (inactive) items so removed compounds stay loggable
       activeItems.push({ item: item, protoName: proto.name });
     });
   });

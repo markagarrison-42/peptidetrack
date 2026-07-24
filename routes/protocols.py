@@ -80,7 +80,6 @@ def update_item(item_id):
     item = ProtocolItem.query.get_or_404(item_id)
     # Security check: ensure item belongs to current user's protocol
     if current_user.role == 'patient' and item.protocol.patient_id != current_user.id:
-        from flask import jsonify
         return jsonify({"error": "Unauthorized"}), 403
     data = request.get_json()
     for field in ("frequency", "route", "timing", "phase", "notes", "reminder_time"):
@@ -124,11 +123,11 @@ def update_item(item_id):
 def delete_item(item_id):
     item = ProtocolItem.query.get_or_404(item_id)
     if current_user.role == 'patient' and item.protocol.patient_id != current_user.id:
-        from flask import jsonify
         return jsonify({"error": "Unauthorized"}), 403
-    db.session.delete(item)
+    # Soft delete — hides from Today, keeps dose history and FK intact
+    item.active = False
     db.session.commit()
-    return jsonify({"message": "Deleted"}), 200
+    return jsonify({"message": "Removed"}), 200
 
 
 @protocols_bp.route("/<int:protocol_id>/suggest-dose", methods=["GET"])
