@@ -1275,6 +1275,22 @@ function renderBodyPanel(checkins, patientId) {
     html += '<div class="card"><div class="card-body" style="height:160px"><canvas id="weight-chart"></canvas></div></div>';
   }
 
+  var histRows = checkins.filter(function(c){ return c.weight_lbs||c.waist_in||c.hips_in||c.chest_in||c.arms_in||c.thighs_in; });
+  if (histRows.length) {
+    html += '<div class="section-label" style="margin-top:20px">Measurement history</div>';
+    html += '<div class="card"><div class="card-body" style="overflow-x:auto;padding:0">';
+    html += '<table class="hist-table"><thead><tr>';
+    html += '<th>Date</th><th>Wt</th><th>Waist</th><th>Hips</th><th>Chest</th><th>Arms</th><th>Thighs</th>';
+    html += '</tr></thead><tbody>';
+    histRows.forEach(function(c){
+      function cell(v){ return '<td>' + (v ? fmtNum(v) : '\u2014') + '</td>'; }
+      html += '<tr>';
+      html += '<td>' + fmtDateShort(c.date) + '</td>';
+      html += cell(c.weight_lbs) + cell(c.waist_in) + cell(c.hips_in) + cell(c.chest_in) + cell(c.arms_in) + cell(c.thighs_in);
+      html += '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
   html += '<div class="section-label" style="margin-top:20px">Log measurements</div>';
   html += '<div class="card"><div class="card-body">';
   html += '<div class="field"><label>Date</label><input type="date" id="ms-date" value="' + today() + '"></div>';

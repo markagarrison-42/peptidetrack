@@ -26,26 +26,35 @@ def create():
     if isinstance(side_effects, list):
         side_effects = ",".join(side_effects)
 
-    c = CheckIn(
-        patient_id=patient_id,
-        date=date.fromisoformat(data["date"]),
-        weight_lbs=float(data["weight_lbs"]) if data.get("weight_lbs") else None,
-        energy=int(data["energy"]) if data.get("energy") else None,
-        mood=int(data["mood"]) if data.get("mood") else None,
-        sleep_quality=int(data["sleep_quality"]) if data.get("sleep_quality") else None,
-        libido=int(data["libido"]) if data.get("libido") else None,
-        appetite=int(data["appetite"]) if data.get("appetite") else None,
-        overall=int(data["overall"]) if data.get("overall") else None,
-        side_effects=side_effects or None,
-        notes=data.get("notes"),
-        waist_in=float(data["waist_in"]) if data.get("waist_in") else None,
-        hips_in=float(data["hips_in"]) if data.get("hips_in") else None,
-        chest_in=float(data["chest_in"]) if data.get("chest_in") else None,
-        arms_in=float(data["arms_in"]) if data.get("arms_in") else None,
-        thighs_in=float(data["thighs_in"]) if data.get("thighs_in") else None,
-        neck_in=float(data["neck_in"]) if data.get("neck_in") else None,
-    )
-    db.session.add(c)
+    checkin_date = date.fromisoformat(data["date"])
+    c = CheckIn.query.filter_by(patient_id=patient_id, date=checkin_date).first()
+    if c is None:
+        c = CheckIn(patient_id=patient_id, date=checkin_date)
+        db.session.add(c)
+
+    def _num(field, conv):
+        # Only overwrite when the field was actually provided (non-empty)
+        if data.get(field) not in (None, ""):
+            setattr(c, field, conv(data[field]))
+
+    _num("weight_lbs", float)
+    _num("energy", int)
+    _num("mood", int)
+    _num("sleep_quality", int)
+    _num("libido", int)
+    _num("appetite", int)
+    _num("overall", int)
+    _num("waist_in", float)
+    _num("hips_in", float)
+    _num("chest_in", float)
+    _num("arms_in", float)
+    _num("thighs_in", float)
+    _num("neck_in", float)
+    if side_effects:
+        c.side_effects = side_effects
+    if data.get("notes") is not None:
+        c.notes = data.get("notes")
+
     db.session.commit()
     return jsonify(c.to_dict()), 201
 
