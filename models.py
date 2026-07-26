@@ -317,6 +317,8 @@ class CheckIn(db.Model):
     arms_in          = db.Column(db.Float,   nullable=True)
     thighs_in        = db.Column(db.Float,   nullable=True)
     neck_in          = db.Column(db.Float,   nullable=True)
+    calf_in          = db.Column(db.Float,   nullable=True)
+    body_fat_pct     = db.Column(db.Float,   nullable=True)
     created_at       = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -339,6 +341,8 @@ class CheckIn(db.Model):
             "arms_in":      self.arms_in,
             "thighs_in":    self.thighs_in,
             "neck_in":      self.neck_in,
+            "calf_in":      self.calf_in,
+            "body_fat_pct": self.body_fat_pct,
         }
 
 

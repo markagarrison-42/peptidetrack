@@ -1245,6 +1245,38 @@ function renderProgress(el, checkins, photos, patientId) {
       });
     }, 100);
   }
+
+  const bfData = checkins.filter(function(c) { return c.body_fat_pct; }).slice().reverse().slice(-20);
+  if (bfData.length > 1) {
+    setTimeout(function() {
+      const canvas = document.getElementById('bodyfat-chart');
+      if (!canvas) return;
+      new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels:   bfData.map(function(c) { return fmtDateShort(c.date); }),
+          datasets: [{
+            data:               bfData.map(function(c) { return c.body_fat_pct; }),
+            borderColor:        '#7c5fe6',
+            borderWidth:        2,
+            pointRadius:        3,
+            pointBackgroundColor: '#7c5fe6',
+            tension:            0.3,
+            fill:               false,
+          }],
+        },
+        options: {
+          responsive:          true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#5a8099', font: { size: 10 } } },
+            y: { grid: { color: '#1a2d42' }, ticks: { color: '#5a8099', font: { size: 10 } } },
+          },
+        },
+      });
+    }, 100);
+  }
 }
 
 function switchProgressTab(name, btn) {
@@ -1259,34 +1291,35 @@ function switchProgressTab(name, btn) {
 function renderBodyPanel(checkins, patientId) {
   const last = checkins[0];
   let html = '<div style="padding:20px">';
-
   if (last) {
     html += '<div class="section-label">Latest measurements</div>';
     html += '<div class="stat-grid">';
-    html += '<div class="stat-card"><div class="stat-label">Weight</div><div class="stat-value">' + (last.weight_lbs ? fmtNum(last.weight_lbs) : '—') + '<small> lbs</small></div></div>';
-    html += '<div class="stat-card"><div class="stat-label">Waist</div><div class="stat-value">'  + (last.waist_in  ? fmtNum(last.waist_in)  : '—') + '<small> in</small></div></div>';
-    html += '<div class="stat-card"><div class="stat-label">Hips</div><div class="stat-value">'   + (last.hips_in   ? fmtNum(last.hips_in)   : '—') + '<small> in</small></div></div>';
-    html += '<div class="stat-card"><div class="stat-label">Chest</div><div class="stat-value">'  + (last.chest_in  ? fmtNum(last.chest_in)  : '—') + '<small> in</small></div></div>';
+    html += '<div class="stat-card"><div class="stat-label">Weight</div><div class="stat-value">' + (last.weight_lbs ? fmtNum(last.weight_lbs) : '\u2014') + '<small> lbs</small></div></div>';
+    html += '<div class="stat-card"><div class="stat-label">Waist</div><div class="stat-value">' + (last.waist_in ? fmtNum(last.waist_in) : '\u2014') + '<small> in</small></div></div>';
+    html += '<div class="stat-card"><div class="stat-label">Chest</div><div class="stat-value">' + (last.chest_in ? fmtNum(last.chest_in) : '\u2014') + '<small> in</small></div></div>';
+    html += '<div class="stat-card"><div class="stat-label">Body fat</div><div class="stat-value">' + (last.body_fat_pct ? fmtNum(last.body_fat_pct) : '\u2014') + '<small> %</small></div></div>';
     html += '</div>';
   }
-
   if (checkins.some(function(c) { return c.weight_lbs; })) {
     html += '<div class="section-label">Weight trend</div>';
     html += '<div class="card"><div class="card-body" style="height:160px"><canvas id="weight-chart"></canvas></div></div>';
   }
-
-  var histRows = checkins.filter(function(c){ return c.weight_lbs||c.waist_in||c.hips_in||c.chest_in||c.arms_in||c.thighs_in; });
+  if (checkins.some(function(c) { return c.body_fat_pct; })) {
+    html += '<div class="section-label">Body fat trend</div>';
+    html += '<div class="card"><div class="card-body" style="height:160px"><canvas id="bodyfat-chart"></canvas></div></div>';
+  }
+  var histRows = checkins.filter(function(c){ return c.weight_lbs||c.neck_in||c.chest_in||c.arms_in||c.waist_in||c.thighs_in||c.calf_in||c.body_fat_pct; });
   if (histRows.length) {
     html += '<div class="section-label" style="margin-top:20px">Measurement history</div>';
     html += '<div class="card"><div class="card-body" style="overflow-x:auto;padding:0">';
     html += '<table class="hist-table"><thead><tr>';
-    html += '<th>Date</th><th>Wt</th><th>Waist</th><th>Hips</th><th>Chest</th><th>Arms</th><th>Thighs</th>';
+    html += '<th>Date</th><th>Wt</th><th>Neck</th><th>Chest</th><th>Bicep</th><th>Waist</th><th>Thigh</th><th>Calf</th><th>BF%</th>';
     html += '</tr></thead><tbody>';
     histRows.forEach(function(c){
       function cell(v){ return '<td>' + (v ? fmtNum(v) : '\u2014') + '</td>'; }
       html += '<tr>';
       html += '<td>' + fmtDateShort(c.date) + '</td>';
-      html += cell(c.weight_lbs) + cell(c.waist_in) + cell(c.hips_in) + cell(c.chest_in) + cell(c.arms_in) + cell(c.thighs_in);
+      html += cell(c.weight_lbs) + cell(c.neck_in) + cell(c.chest_in) + cell(c.arms_in) + cell(c.waist_in) + cell(c.thighs_in) + cell(c.calf_in) + cell(c.body_fat_pct);
       html += '</tr>';
     });
     html += '</tbody></table></div></div>';
@@ -1294,18 +1327,20 @@ function renderBodyPanel(checkins, patientId) {
   html += '<div class="section-label" style="margin-top:20px">Log measurements</div>';
   html += '<div class="card"><div class="card-body">';
   html += '<div class="field"><label>Date</label><input type="date" id="ms-date" value="' + today() + '"></div>';
-  html += '<div class="field-row">';
   html += '<div class="field"><label>Weight (lbs)</label><input type="number" id="ms-weight" step="0.1" inputmode="decimal" placeholder="185"></div>';
-  html += '<div class="field"><label>Waist (in)</label><input type="number" id="ms-waist" step="0.1" inputmode="decimal" placeholder="34"></div>';
-  html += '</div>';
   html += '<div class="field-row">';
-  html += '<div class="field"><label>Hips (in)</label><input type="number" id="ms-hips" step="0.1" inputmode="decimal" placeholder="38"></div>';
+  html += '<div class="field"><label>Neck (in)</label><input type="number" id="ms-neck" step="0.1" inputmode="decimal" placeholder="15"></div>';
   html += '<div class="field"><label>Chest (in)</label><input type="number" id="ms-chest" step="0.1" inputmode="decimal" placeholder="40"></div>';
   html += '</div>';
   html += '<div class="field-row">';
-  html += '<div class="field"><label>Arms (in)</label><input type="number" id="ms-arms" step="0.1" inputmode="decimal" placeholder="14"></div>';
-  html += '<div class="field"><label>Thighs (in)</label><input type="number" id="ms-thighs" step="0.1" inputmode="decimal" placeholder="22"></div>';
+  html += '<div class="field"><label>Bicep (in)</label><input type="number" id="ms-bicep" step="0.1" inputmode="decimal" placeholder="14"></div>';
+  html += '<div class="field"><label>Waist (in)</label><input type="number" id="ms-waist" step="0.1" inputmode="decimal" placeholder="34"></div>';
   html += '</div>';
+  html += '<div class="field-row">';
+  html += '<div class="field"><label>Thigh (in)</label><input type="number" id="ms-thigh" step="0.1" inputmode="decimal" placeholder="22"></div>';
+  html += '<div class="field"><label>Calf (in)</label><input type="number" id="ms-calf" step="0.1" inputmode="decimal" placeholder="15"></div>';
+  html += '</div>';
+  html += '<div class="field"><label>Body fat (%)</label><input type="number" id="ms-bodyfat" step="0.1" inputmode="decimal" placeholder="18"></div>';
   html += '<button class="btn btn-primary" onclick="logMeasurements(' + patientId + ')">Save</button>';
   html += '<div id="ms-flash" class="flash-msg"></div>';
   html += '</div></div>';
@@ -1314,17 +1349,20 @@ function renderBodyPanel(checkins, patientId) {
 }
 
 async function logMeasurements(patientId) {
+  function v(id){ var el = document.getElementById(id); return (el && el.value !== '') ? el.value : null; }
   try {
     await POST('/api/checkins/', {
-      date:       document.getElementById('ms-date').value,
-      weight_lbs: document.getElementById('ms-weight').value || null,
-      waist_in:   document.getElementById('ms-waist').value  || null,
-      hips_in:    document.getElementById('ms-hips').value   || null,
-      chest_in:   document.getElementById('ms-chest').value  || null,
-      arms_in:    document.getElementById('ms-arms').value   || null,
-      thighs_in:  document.getElementById('ms-thighs').value || null,
+      date:         document.getElementById('ms-date').value,
+      weight_lbs:   v('ms-weight'),
+      neck_in:      v('ms-neck'),
+      chest_in:     v('ms-chest'),
+      arms_in:      v('ms-bicep'),
+      waist_in:     v('ms-waist'),
+      thighs_in:    v('ms-thigh'),
+      calf_in:      v('ms-calf'),
+      body_fat_pct: v('ms-bodyfat'),
     });
-    flash('ms-flash', '✓ Saved');
+    flash('ms-flash', '\u2713 Saved');
     loadProgress();
   } catch (err) { flash('ms-flash', err.message, true); }
 }

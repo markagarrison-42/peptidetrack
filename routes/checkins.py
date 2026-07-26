@@ -50,6 +50,8 @@ def create():
     _num("arms_in", float)
     _num("thighs_in", float)
     _num("neck_in", float)
+    _num("calf_in", float)
+    _num("body_fat_pct", float)
     if side_effects:
         c.side_effects = side_effects
     if data.get("notes") is not None:
