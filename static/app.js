@@ -929,12 +929,14 @@ function renderAddCompoundForm(protocolId) {
     html += '<button type="button" id="ac-day-' + protocolId + '-' + d + '" data-day="' + d + '" onclick="toggleDayBtn(this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all 0.15s;min-width:44px">' + d + '</button>';
   });
   html += '</div></div>';
+  html += '<div class="field"><label>Comes pre-mixed?</label><select id="ac-premixed-' + protocolId + '" onchange="togglePremixed(' + protocolId + ')"><option value="no">No - I reconstitute it</option><option value="yes">Yes - ready to inject</option></select></div>';
   html += '<div id="ac-recon-' + protocolId + '">';
   html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:12px 0 8px">Reconstitution (leave blank if pre-filled)</div>';
   html += '<div class="field-row">';
   html += '<div class="field"><label id="ac-vial-label-' + protocolId + '">Vial size (mg)</label><input type="number" id="ac-vial-' + protocolId + '" step="0.1" inputmode="decimal" placeholder="5"></div>';
   html += '<div class="field"><label>Bac water (mL)</label><input type="number" id="ac-water-' + protocolId + '" step="0.1" inputmode="decimal" placeholder="2"></div>';
   html += '</div></div>';
+  html += '<div id="ac-fixedconc-' + protocolId + '" style="display:none"><div class="field"><label>Concentration (mg/mL)</label><input type="number" id="ac-concentration-' + protocolId + '" step="0.1" inputmode="decimal" placeholder="200"></div></div>';
   html += '<button class="btn btn-primary" style="margin-top:4px" onclick="addMyCompound(' + protocolId + ')">Add</button>';
   html += '<div id="ac-flash-' + protocolId + '" class="flash-msg"></div>';
   html += '</div></div>';
@@ -945,6 +947,8 @@ function toggleReconSection(route, protocolId) {
   const sec = document.getElementById('ac-recon-' + protocolId);
   if (!sec) return;
   const injectable = ['SubQ', 'IM', 'IV'].includes(route);
+    const premixedEl  = document.getElementById('ac-premixed-' + protocolId);
+    const isPremixed  = premixedEl ? (premixedEl.value === 'yes') : false;
   sec.style.display = injectable ? 'block' : 'none';
 }
 
@@ -999,6 +1003,19 @@ async function createMyProtocol(patientId) {
   } catch (err) { flash('proto-flash', err.message, true); }
 }
 
+function togglePremixed(protocolId) {
+  var mode = document.getElementById('ac-premixed-' + protocolId).value;
+  var recon = document.getElementById('ac-recon-' + protocolId);
+  var fixed = document.getElementById('ac-fixedconc-' + protocolId);
+  if (mode === 'yes') {
+    if (recon) recon.style.display = 'none';
+    if (fixed) fixed.style.display = 'block';
+  } else {
+    if (recon) recon.style.display = 'block';
+    if (fixed) fixed.style.display = 'none';
+  }
+}
+
 async function addMyCompound(protocolId) {
   const name = document.getElementById('ac-name-' + protocolId).value.trim();
   const dose = document.getElementById('ac-dose-' + protocolId).value;
@@ -1010,6 +1027,8 @@ async function addMyCompound(protocolId) {
     const frequency  = needsDays ? (getSelectedDays(protocolId) || freqRaw) : freqRaw;
     const unit       = document.getElementById('ac-unit-' + protocolId).value;
     const injectable = ['SubQ', 'IM', 'IV'].includes(route);
+    const premixedEl  = document.getElementById('ac-premixed-' + protocolId);
+    const isPremixed  = premixedEl ? (premixedEl.value === 'yes') : false;
     const compound   = await POST('/api/compounds/', {
       name, category: 'Other',
       default_route: route, frequency: frequency,
@@ -1020,8 +1039,9 @@ async function addMyCompound(protocolId) {
       frequency:       frequency,
       route:           route,
       timing:          document.getElementById('ac-timing-' + protocolId).value || null,
-      vial_size_mg:    (injectable && document.getElementById('ac-vial-' + protocolId).value) ? document.getElementById('ac-vial-' + protocolId).value : null,
-      recon_volume_ml: (injectable && document.getElementById('ac-water-' + protocolId).value) ? document.getElementById('ac-water-' + protocolId).value : null,
+      vial_size_mg:    (injectable && !isPremixed && document.getElementById('ac-vial-' + protocolId).value) ? document.getElementById('ac-vial-' + protocolId).value : null,
+      recon_volume_ml: (injectable && !isPremixed && document.getElementById('ac-water-' + protocolId).value) ? document.getElementById('ac-water-' + protocolId).value : null,
+      fixed_concentration_mg_per_ml: (injectable && isPremixed && document.getElementById('ac-concentration-' + protocolId).value) ? document.getElementById('ac-concentration-' + protocolId).value : null,
       notes:           unit !== 'mg' ? 'unit:' + unit : null,
       reminder_time:   document.getElementById('ac-reminder-' + protocolId) ? document.getElementById('ac-reminder-' + protocolId).value || null : null,
     });
@@ -1075,14 +1095,40 @@ function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timin
     };
   }
   document.getElementById('ecm-flash').textContent = '';
-  // Reconstitution fields
-  var ecRecon = document.getElementById('ecm-recon');
+  // Reconstitution / pre-mixed fields
   var injectable = ['SubQ','IM','IV'].includes(route || 'SubQ');
-  if (ecRecon) ecRecon.style.display = injectable ? 'block' : 'none';
-  if (document.getElementById('ecm-vial'))     document.getElementById('ecm-vial').value     = vialSize  || '';
-  if (document.getElementById('ecm-water'))    document.getElementById('ecm-water').value    = reconVol  || '';
-  if (document.getElementById('ecm-reminder')) document.getElementById('ecm-reminder').value = foundItem ? (foundItem.reminder_time || '') : '';
+  var fixedConc = foundItem ? foundItem.fixed_concentration_mg_per_ml : null;
+  var premixedSel = document.getElementById('ecm-premixed');
+  if (premixedSel) premixedSel.value = fixedConc ? 'yes' : 'no';
+  if (document.getElementById('ecm-vial'))          document.getElementById('ecm-vial').value          = vialSize  || '';
+  if (document.getElementById('ecm-water'))         document.getElementById('ecm-water').value         = reconVol  || '';
+  if (document.getElementById('ecm-concentration')) document.getElementById('ecm-concentration').value = fixedConc || '';
+  if (document.getElementById('ecm-reminder'))      document.getElementById('ecm-reminder').value      = foundItem ? (foundItem.reminder_time || '') : '';
+  if (!injectable) {
+    if (document.getElementById('ecm-premixed')) document.getElementById('ecm-premixed').closest('.field').style.display = 'none';
+    var ecRecon = document.getElementById('ecm-recon');
+    var ecFixed = document.getElementById('ecm-fixedconc');
+    if (ecRecon) ecRecon.style.display = 'none';
+    if (ecFixed) ecFixed.style.display = 'none';
+  } else {
+    if (document.getElementById('ecm-premixed')) document.getElementById('ecm-premixed').closest('.field').style.display = 'block';
+    toggleEcmPremixed();
+  }
   modal.classList.add('open');
+}
+
+function toggleEcmPremixed() {
+  var sel = document.getElementById('ecm-premixed');
+  var mode = sel ? sel.value : 'no';
+  var ecRecon = document.getElementById('ecm-recon');
+  var ecFixed = document.getElementById('ecm-fixedconc');
+  if (mode === 'yes') {
+    if (ecRecon) ecRecon.style.display = 'none';
+    if (ecFixed) ecFixed.style.display = 'block';
+  } else {
+    if (ecRecon) ecRecon.style.display = 'block';
+    if (ecFixed) ecFixed.style.display = 'none';
+  }
 }
 
 function closeEditCompoundModal() {
@@ -1116,8 +1162,11 @@ async function saveEditCompoundModal() {
   const freq    = freqRaw === 'Specific days' ? (getEcmSelectedDays() || 'Specific days') : freqRaw;
   const route   = document.getElementById('ecm-route').value;
   if (isNaN(dose) || dose <= 0) { flash('ecm-flash', 'Enter a valid dose', true); return; }
-  var vial  = document.getElementById('ecm-vial')  ? parseFloat(document.getElementById('ecm-vial').value)  || null : null;
-  var water = document.getElementById('ecm-water') ? parseFloat(document.getElementById('ecm-water').value) || null : null;
+  var premixedSel = document.getElementById('ecm-premixed');
+  var isPremixed = premixedSel ? (premixedSel.value === 'yes') : false;
+  var vial  = (!isPremixed && document.getElementById('ecm-vial'))  ? parseFloat(document.getElementById('ecm-vial').value)  || null : null;
+  var water = (!isPremixed && document.getElementById('ecm-water')) ? parseFloat(document.getElementById('ecm-water').value) || null : null;
+  var fixedConc = (isPremixed && document.getElementById('ecm-concentration')) ? parseFloat(document.getElementById('ecm-concentration').value) || null : null;
   try {
     const reminder = document.getElementById('ecm-reminder') ? document.getElementById('ecm-reminder').value || null : null;
     await PUT('/api/protocols/items/' + itemId, {
@@ -1127,6 +1176,7 @@ async function saveEditCompoundModal() {
       route:           route,
       vial_size_mg:    vial,
       recon_volume_ml: water,
+      fixed_concentration_mg_per_ml: fixedConc,
       reminder_time:   reminder,
     });
     closeEditCompoundModal();

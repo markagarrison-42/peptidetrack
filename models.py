@@ -205,6 +205,7 @@ class ProtocolItem(db.Model):
     phase          = db.Column(db.String(50),  nullable=True)
     vial_size_mg   = db.Column(db.Float, nullable=True)
     recon_volume_ml = db.Column(db.Float, nullable=True)
+    fixed_concentration_mg_per_ml = db.Column(db.Float, nullable=True)
     notes          = db.Column(db.Text,  nullable=True)
     active         = db.Column(db.Boolean, default=True)
     dose_overridden = db.Column(db.Boolean, default=False)
@@ -214,6 +215,8 @@ class ProtocolItem(db.Model):
 
     @property
     def concentration_mg_per_ml(self):
+        if self.fixed_concentration_mg_per_ml:
+            return self.fixed_concentration_mg_per_ml
         if self.vial_size_mg and self.recon_volume_ml:
             return round(self.vial_size_mg / self.recon_volume_ml, 4)
         return None
@@ -246,6 +249,7 @@ class ProtocolItem(db.Model):
             "phase":                 self.phase,
             "vial_size_mg":          self.vial_size_mg,
             "recon_volume_ml":       self.recon_volume_ml,
+            "fixed_concentration_mg_per_ml": self.fixed_concentration_mg_per_ml,
             "concentration_mg_per_ml": self.concentration_mg_per_ml,
             "dose_ml":               self.dose_ml,
             "dose_units":            self.dose_units,

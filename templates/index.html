@@ -2300,6 +2300,13 @@
       <label>Reminder time (optional)</label>
       <input type="time" id="ecm-reminder">
     </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>Comes pre-mixed?</label>
+      <select id="ecm-premixed" onchange="toggleEcmPremixed()">
+        <option value="no">No - I reconstitute it</option>
+        <option value="yes">Yes - ready to inject</option>
+      </select>
+    </div>
     <div id="ecm-recon" style="display:none">
       <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:4px 0 10px">Reconstitution</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
@@ -2311,6 +2318,12 @@
           <label>Bac water (mL)</label>
           <input type="number" id="ecm-water" step="0.1" inputmode="decimal" placeholder="2">
         </div>
+      </div>
+    </div>
+    <div id="ecm-fixedconc" style="display:none;margin-bottom:12px">
+      <div class="field" style="margin:0">
+        <label>Concentration (mg/mL)</label>
+        <input type="number" id="ecm-concentration" step="0.1" inputmode="decimal" placeholder="200">
       </div>
     </div>
     <div id="ecm-flash" class="flash-msg"></div>

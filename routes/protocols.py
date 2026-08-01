@@ -67,6 +67,7 @@ def add_item(protocol_id):
         phase=data.get("phase"),
         vial_size_mg=float(data["vial_size_mg"]) if data.get("vial_size_mg") else None,
         recon_volume_ml=float(data["recon_volume_ml"]) if data.get("recon_volume_ml") else None,
+        fixed_concentration_mg_per_ml=float(data["fixed_concentration_mg_per_ml"]) if data.get("fixed_concentration_mg_per_ml") else None,
         notes=data.get("notes"),
     )
     db.session.add(item)
@@ -95,7 +96,7 @@ def update_item(item_id):
                     new_value=str(new_val) if new_val else None,
                 ))
             setattr(item, field, data[field])
-    for field in ("dose_mg", "vial_size_mg", "recon_volume_ml"):
+    for field in ("dose_mg", "vial_size_mg", "recon_volume_ml", "fixed_concentration_mg_per_ml"):
         if field in data:
             old_val = getattr(item, field)
             new_val = float(data[field]) if data[field] else None
