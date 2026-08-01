@@ -455,6 +455,13 @@ async function saveAddPastDose() {
   } catch (err) { flash('apd-flash', err.message, true); }
 }
 
+let HISTORY_COMPOUND_FILTER = '';
+
+function setHistoryFilter(name) {
+  HISTORY_COMPOUND_FILTER = name || '';
+  loadHistory(HISTORY_OFFSET);
+}
+
 async function loadHistory(offset) {
   HISTORY_OFFSET = offset || 0;
   const panel = document.getElementById('today-history-panel');
@@ -484,9 +491,31 @@ function renderHistory(panel, logs, offset) {
     return;
   }
 
+  // Compound filter dropdown
+  const compoundNames = Array.from(new Set(logs.map(function(l) { return l.compound_name || 'Unknown'; }))).sort();
+  if (compoundNames.length > 1) {
+    html += '<div class="field" style="margin:12px 20px"><select id="history-compound-filter" onchange="setHistoryFilter(this.value)">';
+    html += '<option value="">All compounds</option>';
+    compoundNames.forEach(function(name) {
+      const sel = (name === HISTORY_COMPOUND_FILTER) ? ' selected' : '';
+      html += '<option value="' + name.replace(/"/g, '&quot;') + '"' + sel + '>' + name + '</option>';
+    });
+    html += '</select></div>';
+  }
+
+  const filteredLogs = HISTORY_COMPOUND_FILTER
+    ? logs.filter(function(l) { return (l.compound_name || 'Unknown') === HISTORY_COMPOUND_FILTER; })
+    : logs;
+
+  if (!filteredLogs.length) {
+    html += '<div class="empty-state"><div class="empty-state-icon">📋</div>No ' + HISTORY_COMPOUND_FILTER + ' doses in this period.</div>';
+    panel.innerHTML = html;
+    return;
+  }
+
   // Group by date
   const byDate = {};
-  logs.forEach(function(log) {
+  filteredLogs.forEach(function(log) {
     if (!byDate[log.date]) byDate[log.date] = [];
     byDate[log.date].push(log);
   });
@@ -873,12 +902,16 @@ function renderProtocolCard(proto, patientId) {
       html += '<button onclick="editCompoundItem(' + item.id + ', ' + patientId + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer">Edit</button>';
       html += '<button onclick="removeCompoundItem(' + item.id + ', ' + patientId + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--red);font-size:12px;cursor:pointer">✕</button>';
       html += '</div></div>';
-      // Syringe guide (same compound block)
-      if (item.dose_units && item.vial_size_mg) {
+      // Syringe guide (same compound block) - works for both reconstituted and pre-mixed
+      if (item.dose_units) {
         html += '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px">';
         html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Syringe guide</div>';
         html += '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.9">';
-        html += item.vial_size_mg + sUnit + ' vial / ' + item.recon_volume_ml + 'mL bac water = ' + item.concentration_mg_per_ml + ' ' + sUnit + '/mL<br>';
+        if (item.vial_size_mg && item.recon_volume_ml) {
+          html += item.vial_size_mg + sUnit + ' vial / ' + item.recon_volume_ml + 'mL bac water = ' + item.concentration_mg_per_ml + ' ' + sUnit + '/mL<br>';
+        } else if (item.fixed_concentration_mg_per_ml) {
+          html += 'Pre-mixed at ' + item.fixed_concentration_mg_per_ml + ' ' + sUnit + '/mL<br>';
+        }
         html += item.dose_mg + sUnit + ' dose = ' + item.dose_ml + ' mL';
         html += '</div>';
         html += '<div style="margin-top:8px"><div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Draw to this line</div>';
