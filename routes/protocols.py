@@ -68,6 +68,8 @@ def add_item(protocol_id):
         vial_size_mg=float(data["vial_size_mg"]) if data.get("vial_size_mg") else None,
         recon_volume_ml=float(data["recon_volume_ml"]) if data.get("recon_volume_ml") else None,
         fixed_concentration_mg_per_ml=float(data["fixed_concentration_mg_per_ml"]) if data.get("fixed_concentration_mg_per_ml") else None,
+        cycle_start_date=date.fromisoformat(data["cycle_start_date"]) if data.get("cycle_start_date") else None,
+        cycle_end_date=date.fromisoformat(data["cycle_end_date"]) if data.get("cycle_end_date") else None,
         notes=data.get("notes"),
     )
     db.session.add(item)
@@ -109,6 +111,9 @@ def update_item(item_id):
                     new_value=str(new_val) if new_val else None,
                 ))
             setattr(item, field, new_val)
+    for field in ("cycle_start_date", "cycle_end_date"):
+        if field in data:
+            setattr(item, field, date.fromisoformat(data[field]) if data[field] else None)
     if "dose_mg" in data:
         item.dose_overridden = True
     if "dose_overridden" in data:

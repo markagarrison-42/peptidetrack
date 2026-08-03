@@ -897,6 +897,16 @@ function renderProtocolCard(proto, patientId) {
       if (item.dose_units) {
         html += '<div style="font-family:var(--mono);font-size:11px;color:var(--accent);background:rgba(0,229,212,0.08);padding:2px 8px;border-radius:4px;margin-top:5px;display:inline-block">💉 ' + item.dose_units + ' units</div>';
       }
+      if (item.cycle_end_date) {
+        var endD = new Date(item.cycle_end_date + 'T00:00:00');
+        var todayD = new Date(); todayD.setHours(0,0,0,0);
+        var daysLeft = Math.round((endD - todayD) / 86400000);
+        var badgeColor = daysLeft < 0 ? '#ff5252' : (daysLeft === 0 ? '#ffb300' : 'var(--muted)');
+        var badgeBg = daysLeft < 0 ? 'rgba(255,82,82,0.1)' : (daysLeft === 0 ? 'rgba(255,179,0,0.1)' : 'rgba(255,255,255,0.05)');
+        var endDateStr = endD.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        var badgeText = daysLeft < 0 ? ('Cycle ended ' + endDateStr) : (daysLeft === 0 ? ('Cycle ends today (' + endDateStr + ')') : ('Cycle ends in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' (' + endDateStr + ')'));
+        html += '<div style="font-family:var(--mono);font-size:11px;color:' + badgeColor + ';background:' + badgeBg + ';padding:2px 8px;border-radius:4px;margin-top:5px;margin-left:6px;display:inline-block">' + badgeText + '</div>';
+      }
       html += '</div>';
       html += '<div style="display:flex;gap:6px;flex-shrink:0">';
       html += '<button onclick="editCompoundItem(' + item.id + ', ' + patientId + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer">Edit</button>';
@@ -956,6 +966,10 @@ function renderAddCompoundForm(protocolId) {
   html += '</div>';
   html += '<div class="field"><label>Timing (optional)</label><input type="text" id="ac-timing-' + protocolId + '" placeholder="e.g. Fasted AM, With food, Pre-bed"></div>';
   html += '<div class="field"><label>Reminder time (optional)</label><input type="time" id="ac-reminder-' + protocolId + '"></div>';
+  html += '<div class="field-row">';
+  html += '<div class="field"><label>Cycle start (optional)</label><input type="date" id="ac-cycle-start-' + protocolId + '"></div>';
+  html += '<div class="field"><label>Cycle end (optional)</label><input type="date" id="ac-cycle-end-' + protocolId + '"></div>';
+  html += '</div>';
   html += '<div class="field" id="ac-days-' + protocolId + '" style="display:none"><label>Specific days</label>';
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">';
   ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(d) {
@@ -1077,6 +1091,8 @@ async function addMyCompound(protocolId) {
       fixed_concentration_mg_per_ml: (injectable && isPremixed && document.getElementById('ac-concentration-' + protocolId).value) ? document.getElementById('ac-concentration-' + protocolId).value : null,
       notes:           unit !== 'mg' ? 'unit:' + unit : null,
       reminder_time:   document.getElementById('ac-reminder-' + protocolId) ? document.getElementById('ac-reminder-' + protocolId).value || null : null,
+      cycle_start_date: document.getElementById('ac-cycle-start-' + protocolId) ? document.getElementById('ac-cycle-start-' + protocolId).value || null : null,
+      cycle_end_date:   document.getElementById('ac-cycle-end-' + protocolId) ? document.getElementById('ac-cycle-end-' + protocolId).value || null : null,
     });
     loadProtocol();
   } catch (err) { flash('ac-flash-' + protocolId, err.message, true); }
@@ -1137,6 +1153,8 @@ function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timin
   if (document.getElementById('ecm-water'))         document.getElementById('ecm-water').value         = reconVol  || '';
   if (document.getElementById('ecm-concentration')) document.getElementById('ecm-concentration').value = fixedConc || '';
   if (document.getElementById('ecm-reminder'))      document.getElementById('ecm-reminder').value      = foundItem ? (foundItem.reminder_time || '') : '';
+  if (document.getElementById('ecm-cycle-start'))    document.getElementById('ecm-cycle-start').value   = foundItem ? (foundItem.cycle_start_date || '') : '';
+  if (document.getElementById('ecm-cycle-end'))      document.getElementById('ecm-cycle-end').value     = foundItem ? (foundItem.cycle_end_date || '') : '';
   if (!injectable) {
     if (document.getElementById('ecm-premixed')) document.getElementById('ecm-premixed').closest('.field').style.display = 'none';
     var ecRecon = document.getElementById('ecm-recon');
@@ -1202,6 +1220,8 @@ async function saveEditCompoundModal() {
   var fixedConc = (isPremixed && document.getElementById('ecm-concentration')) ? parseFloat(document.getElementById('ecm-concentration').value) || null : null;
   try {
     const reminder = document.getElementById('ecm-reminder') ? document.getElementById('ecm-reminder').value || null : null;
+    const cycleStart = document.getElementById('ecm-cycle-start') ? document.getElementById('ecm-cycle-start').value || null : null;
+    const cycleEnd   = document.getElementById('ecm-cycle-end') ? document.getElementById('ecm-cycle-end').value || null : null;
     await PUT('/api/protocols/items/' + itemId, {
       dose_mg:         dose,
       timing:          timing || null,
@@ -1211,6 +1231,8 @@ async function saveEditCompoundModal() {
       recon_volume_ml: water,
       fixed_concentration_mg_per_ml: fixedConc,
       reminder_time:   reminder,
+      cycle_start_date: cycleStart,
+      cycle_end_date:   cycleEnd,
     });
     closeEditCompoundModal();
     loadProtocol();

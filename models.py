@@ -206,6 +206,8 @@ class ProtocolItem(db.Model):
     vial_size_mg   = db.Column(db.Float, nullable=True)
     recon_volume_ml = db.Column(db.Float, nullable=True)
     fixed_concentration_mg_per_ml = db.Column(db.Float, nullable=True)
+    cycle_start_date = db.Column(db.Date, nullable=True)
+    cycle_end_date = db.Column(db.Date, nullable=True)
     notes          = db.Column(db.Text,  nullable=True)
     active         = db.Column(db.Boolean, default=True)
     dose_overridden = db.Column(db.Boolean, default=False)
@@ -250,6 +252,8 @@ class ProtocolItem(db.Model):
             "vial_size_mg":          self.vial_size_mg,
             "recon_volume_ml":       self.recon_volume_ml,
             "fixed_concentration_mg_per_ml": self.fixed_concentration_mg_per_ml,
+            "cycle_start_date": self.cycle_start_date.isoformat() if self.cycle_start_date else None,
+            "cycle_end_date": self.cycle_end_date.isoformat() if self.cycle_end_date else None,
             "concentration_mg_per_ml": self.concentration_mg_per_ml,
             "dose_ml":               self.dose_ml,
             "dose_units":            self.dose_units,
