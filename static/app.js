@@ -1322,6 +1322,7 @@ async function loadProgress() {
       S.photos[p.date].push(p);
     });
     COMPARE_PHOTOS = S.photos;
+    S.checkins = checkins;
     renderProgress(el, checkins, photos, me.id);
   } catch (err) {
     el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div>' + err.message + '</div>';
@@ -1420,6 +1421,7 @@ function switchProgressTab(name, btn) {
 function renderBodyPanel(checkins, patientId) {
   const last = checkins[0];
   let html = '<div style="padding:20px">';
+  html += '<button class="btn btn-ghost" style="margin-bottom:16px" onclick="showReport()">Print / Save Report</button>';
   if (last) {
     html += '<div class="section-label">Latest measurements</div>';
     html += '<div class="stat-grid">';
@@ -1537,6 +1539,90 @@ async function logMeasurements(patientId) {
     flash('ms-flash', '\u2713 Saved');
     loadProgress();
   } catch (err) { flash('ms-flash', err.message, true); }
+}
+
+function showReport() {
+  var checkins = S.checkins || [];
+  var last = checkins[0];
+  function cell(v, unit) { return v ? (fmtNum(v) + (unit || '')) : '\u2014'; }
+
+  var html = '<div id="report-overlay" style="position:fixed;inset:0;background:#0a0715;z-index:9999;overflow-y:auto;padding:calc(24px + env(safe-area-inset-top)) 24px 24px;color:#e8e5f5;font-family:var(--sans)">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px" class="no-print">';
+  html += '<button class="btn btn-ghost" onclick="closeReport()">\u2190 Back</button>';
+  html += '<button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>';
+  html += '</div>';
+
+  html += '<h1 style="font-size:22px;margin-bottom:4px">PeptideTrack Report</h1>';
+  html += '<div style="font-size:12px;color:#9a94b8;margin-bottom:24px">Generated ' + new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) + ' at ' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) + '</div>';
+
+  if (last) {
+    html += '<h2 style="font-size:16px;margin:20px 0 8px">Latest Measurements (' + fmtDateShort(last.date) + ')</h2>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:13px"><tbody>';
+    html += '<tr><td style="padding:4px 8px;color:#9a94b8">Weight</td><td style="padding:4px 8px">' + cell(last.weight_lbs, ' lbs') + '</td></tr>';
+    html += '<tr><td style="padding:4px 8px;color:#9a94b8">Waist</td><td style="padding:4px 8px">' + cell(last.waist_in, ' in') + '</td></tr>';
+    html += '<tr><td style="padding:4px 8px;color:#9a94b8">Chest</td><td style="padding:4px 8px">' + cell(last.chest_in, ' in') + '</td></tr>';
+    html += '<tr><td style="padding:4px 8px;color:#9a94b8">Body fat</td><td style="padding:4px 8px">' + cell(last.body_fat_pct, '%') + '</td></tr>';
+    html += '</tbody></table>';
+
+    html += '<h2 style="font-size:16px;margin:20px 0 8px">Latest Vitals (' + fmtDateShort(last.date) + ')</h2>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:13px"><tbody>';
+    var bp = (last.systolic && last.diastolic) ? (last.systolic + '/' + last.diastolic) : '\u2014';
+    html += '<tr><td style="padding:4px 8px;color:#9a94b8">Blood pressure</td><td style="padding:4px 8px">' + bp + '</td></tr>';
+    html += '<tr><td style="padding:4px 8px;color:#9a94b8">Heart rate</td><td style="padding:4px 8px">' + cell(last.heart_rate, ' bpm') + '</td></tr>';
+    html += '<tr><td style="padding:4px 8px;color:#9a94b8">O2 sat</td><td style="padding:4px 8px">' + cell(last.o2_sat_pct, '%') + '</td></tr>';
+    html += '<tr><td style="padding:4px 8px;color:#9a94b8">Fasting glucose</td><td style="padding:4px 8px">' + cell(last.blood_sugar_fasting, ' mg/dL') + '</td></tr>';
+    html += '</tbody></table>';
+  }
+
+  var histRows = checkins.filter(function(c){ return c.weight_lbs||c.neck_in||c.chest_in||c.arms_in||c.waist_in||c.thighs_in||c.calf_in||c.body_fat_pct; });
+  if (histRows.length) {
+    html += '<h2 style="font-size:16px;margin:20px 0 8px">Measurement History</h2>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid #2a2540">';
+    html += '<th style="text-align:left;padding:4px 8px">Date</th><th style="padding:4px 8px">Wt</th><th style="padding:4px 8px">Neck</th><th style="padding:4px 8px">Chest</th><th style="padding:4px 8px">Bicep</th><th style="padding:4px 8px">Waist</th><th style="padding:4px 8px">Thigh</th><th style="padding:4px 8px">Calf</th><th style="padding:4px 8px">BF%</th></tr></thead><tbody>';
+    histRows.forEach(function(c){
+      html += '<tr style="border-bottom:1px solid #1a1730">';
+      html += '<td style="padding:4px 8px">' + fmtDateShort(c.date) + '</td>';
+      html += '<td style="padding:4px 8px">' + cell(c.weight_lbs) + '</td>';
+      html += '<td style="padding:4px 8px">' + cell(c.neck_in) + '</td>';
+      html += '<td style="padding:4px 8px">' + cell(c.chest_in) + '</td>';
+      html += '<td style="padding:4px 8px">' + cell(c.arms_in) + '</td>';
+      html += '<td style="padding:4px 8px">' + cell(c.waist_in) + '</td>';
+      html += '<td style="padding:4px 8px">' + cell(c.thighs_in) + '</td>';
+      html += '<td style="padding:4px 8px">' + cell(c.calf_in) + '</td>';
+      html += '<td style="padding:4px 8px">' + cell(c.body_fat_pct) + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  var vitalsRows = checkins.filter(function(c){ return c.systolic||c.diastolic||c.heart_rate||c.o2_sat_pct||c.blood_sugar_fasting; });
+  if (vitalsRows.length) {
+    html += '<h2 style="font-size:16px;margin:20px 0 8px">Vitals History</h2>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid #2a2540">';
+    html += '<th style="text-align:left;padding:4px 8px">Date</th><th style="padding:4px 8px">BP</th><th style="padding:4px 8px">HR</th><th style="padding:4px 8px">O2%</th><th style="padding:4px 8px">Glucose</th></tr></thead><tbody>';
+    vitalsRows.forEach(function(c){
+      var rowBp = (c.systolic && c.diastolic) ? (c.systolic + '/' + c.diastolic) : '\u2014';
+      html += '<tr style="border-bottom:1px solid #1a1730">';
+      html += '<td style="padding:4px 8px">' + fmtDateShort(c.date) + '</td>';
+      html += '<td style="padding:4px 8px">' + rowBp + '</td>';
+      html += '<td style="padding:4px 8px">' + cell(c.heart_rate) + '</td>';
+      html += '<td style="padding:4px 8px">' + cell(c.o2_sat_pct) + '</td>';
+      html += '<td style="padding:4px 8px">' + cell(c.blood_sugar_fasting) + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  html += '</div>';
+
+  var container = document.createElement('div');
+  container.innerHTML = html;
+  document.body.appendChild(container.firstChild);
+}
+
+function closeReport() {
+  var overlay = document.getElementById('report-overlay');
+  if (overlay) overlay.remove();
 }
 
 async function logVitals(patientId) {

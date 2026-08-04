@@ -2042,6 +2042,12 @@
     .hist-table td:first-child { text-align: left; color: var(--accent); }
     .hist-table tbody tr:last-child td { border-bottom: none; }
 
+    @media print {
+      body * { visibility: hidden; }
+      #report-overlay, #report-overlay * { visibility: visible; }
+      #report-overlay { position: absolute; inset: 0; overflow: visible; }
+      #report-overlay .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body>
