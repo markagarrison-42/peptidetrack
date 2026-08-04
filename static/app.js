@@ -587,6 +587,25 @@ async function deleteLog(logId) {
   } catch (err) { alert(err.message); }
 }
 
+function sortByReminderTime(entries, getItem) {
+  return entries.slice().sort(function(a, b) {
+    var ta = getItem(a).reminder_time;
+    var tb = getItem(b).reminder_time;
+    if (!ta && !tb) return 0;
+    if (!ta) return 1;
+    if (!tb) return -1;
+    return ta.localeCompare(tb);
+  });
+}
+
+function sortByCompoundName(entries, getItem) {
+  return entries.slice().sort(function(a, b) {
+    var na = (getItem(a).compound_name || '').toLowerCase();
+    var nb = (getItem(b).compound_name || '').toLowerCase();
+    return na.localeCompare(nb);
+  });
+}
+
 function renderToday(el, protocols, takenIds, skippedIds) {
   const dayName  = fmtDay();
   const dateFull = fmtMonthDay();
@@ -639,13 +658,15 @@ function renderToday(el, protocols, takenIds, skippedIds) {
   const multiProto = protocols.length > 1;
   if (multiProto) {
     protocols.forEach(function(proto) {
-      const protoItems = allItems.filter(function(e) { return e.protoName === proto.name; });
+      var protoItems = allItems.filter(function(e) { return e.protoName === proto.name; });
       if (!protoItems.length) return;
+      protoItems = sortByReminderTime(protoItems, function(e) { return e.item; });
       html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin:16px 0 6px">' + proto.name + '</div>';
       protoItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds); });
     });
   } else {
-    allItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds); });
+    var sortedItems = sortByReminderTime(allItems, function(e) { return e.item; });
+    sortedItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds); });
   }
 
   html += '</div>';
@@ -673,6 +694,7 @@ function renderToday(el, protocols, takenIds, skippedIds) {
     });
   });
   if (tomorrowItems.length) {
+    tomorrowItems = sortByReminderTime(tomorrowItems, function(i) { return i; });
     html += '<div class="tomorrow-section">';
     html += '<div class="tomorrow-label">Tomorrow</div>';
     tomorrowItems.forEach(function(item) {
@@ -714,6 +736,7 @@ function renderDoseCard(item, takenIds, skippedIds) {
   if (item.frequency) html += ' · ' + item.frequency;
   if (item.route)     html += ' · ' + item.route;
   if (item.timing)    html += ' · ' + item.timing;
+  if (item.reminder_time) html += ' · \ud83d\udd14 ' + fmt12hr(item.reminder_time);
   html += '</div>';
   if (item.dose_units) {
     html += '<div class="dose-units-badge">💉 ' + item.dose_units + ' units</div>';
@@ -856,7 +879,8 @@ function renderProtocol(el, protocols, patientId) {
 }
 
 function renderProtocolCard(proto, patientId) {
-  const items    = proto.items ? proto.items.filter(function(i) { return i.active; }) : [];
+  var items    = proto.items ? proto.items.filter(function(i) { return i.active; }) : [];
+  items = sortByCompoundName(items, function(i) { return i; });
   const weeksOn  = proto.start_date ? Math.floor((new Date() - new Date(proto.start_date + 'T00:00:00')) / (7 * 24 * 60 * 60 * 1000)) : null;
   const isActive = proto.active;
 
