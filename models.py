@@ -327,6 +327,11 @@ class CheckIn(db.Model):
     neck_in          = db.Column(db.Float,   nullable=True)
     calf_in          = db.Column(db.Float,   nullable=True)
     body_fat_pct     = db.Column(db.Float,   nullable=True)
+    systolic         = db.Column(db.Integer, nullable=True)
+    diastolic        = db.Column(db.Integer, nullable=True)
+    blood_sugar_fasting = db.Column(db.Float, nullable=True)
+    heart_rate       = db.Column(db.Integer, nullable=True)
+    o2_sat_pct       = db.Column(db.Float,   nullable=True)
     created_at       = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -351,6 +356,11 @@ class CheckIn(db.Model):
             "neck_in":      self.neck_in,
             "calf_in":      self.calf_in,
             "body_fat_pct": self.body_fat_pct,
+            "systolic": self.systolic,
+            "diastolic": self.diastolic,
+            "blood_sugar_fasting": self.blood_sugar_fasting,
+            "heart_rate": self.heart_rate,
+            "o2_sat_pct": self.o2_sat_pct,
         }
 
 

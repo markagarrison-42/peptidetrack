@@ -52,6 +52,11 @@ def create():
     _num("neck_in", float)
     _num("calf_in", float)
     _num("body_fat_pct", float)
+    _num("systolic", int)
+    _num("diastolic", int)
+    _num("blood_sugar_fasting", float)
+    _num("heart_rate", int)
+    _num("o2_sat_pct", float)
     if side_effects:
         c.side_effects = side_effects
     if data.get("notes") is not None:

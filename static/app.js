@@ -1429,6 +1429,34 @@ function renderBodyPanel(checkins, patientId) {
     html += '<div class="stat-card"><div class="stat-label">Body fat</div><div class="stat-value">' + (last.body_fat_pct ? fmtNum(last.body_fat_pct) : '\u2014') + '<small> %</small></div></div>';
     html += '</div>';
   }
+  if (last && (last.systolic || last.heart_rate || last.o2_sat_pct || last.blood_sugar_fasting)) {
+    html += '<div class="section-label" style="margin-top:20px">Latest vitals</div>';
+    html += '<div class="stat-grid">';
+    var bpStr = (last.systolic && last.diastolic) ? (last.systolic + '/' + last.diastolic) : '\u2014';
+    html += '<div class="stat-card"><div class="stat-label">Blood pressure</div><div class="stat-value">' + bpStr + '</div></div>';
+    html += '<div class="stat-card"><div class="stat-label">Heart rate</div><div class="stat-value">' + (last.heart_rate ? last.heart_rate : '\u2014') + '<small> bpm</small></div></div>';
+    html += '<div class="stat-card"><div class="stat-label">O2 sat</div><div class="stat-value">' + (last.o2_sat_pct ? fmtNum(last.o2_sat_pct) : '\u2014') + '<small> %</small></div></div>';
+    html += '<div class="stat-card"><div class="stat-label">Fasting glucose</div><div class="stat-value">' + (last.blood_sugar_fasting ? fmtNum(last.blood_sugar_fasting) : '\u2014') + '<small> mg/dL</small></div></div>';
+    html += '</div>';
+  }
+  var vitalsRows = checkins.filter(function(c){ return c.systolic||c.diastolic||c.heart_rate||c.o2_sat_pct||c.blood_sugar_fasting; });
+  if (vitalsRows.length) {
+    html += '<div class="section-label" style="margin-top:20px">Vitals history</div>';
+    html += '<div class="card"><div class="card-body" style="overflow-x:auto;padding:0">';
+    html += '<table class="hist-table"><thead><tr>';
+    html += '<th>Date</th><th>BP</th><th>HR</th><th>O2%</th><th>Glucose</th>';
+    html += '</tr></thead><tbody>';
+    vitalsRows.forEach(function(c){
+      function cell(v){ return '<td>' + (v ? fmtNum(v) : '\u2014') + '</td>'; }
+      var bp = (c.systolic && c.diastolic) ? (c.systolic + '/' + c.diastolic) : '\u2014';
+      html += '<tr>';
+      html += '<td>' + fmtDateShort(c.date) + '</td>';
+      html += '<td>' + bp + '</td>';
+      html += cell(c.heart_rate) + cell(c.o2_sat_pct) + cell(c.blood_sugar_fasting);
+      html += '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
   if (checkins.some(function(c) { return c.weight_lbs; })) {
     html += '<div class="section-label">Weight trend</div>';
     html += '<div class="card"><div class="card-body" style="height:160px"><canvas id="weight-chart"></canvas></div></div>';
@@ -1473,6 +1501,21 @@ function renderBodyPanel(checkins, patientId) {
   html += '<button class="btn btn-primary" onclick="logMeasurements(' + patientId + ')">Save</button>';
   html += '<div id="ms-flash" class="flash-msg"></div>';
   html += '</div></div>';
+  html += '<div class="section-label" style="margin-top:20px">Log vitals</div>';
+  html += '<div class="card"><div class="card-body">';
+  html += '<div class="field"><label>Date</label><input type="date" id="v-date" value="' + today() + '"></div>';
+  html += '<div class="field-row">';
+  html += '<div class="field"><label>Systolic</label><input type="number" id="v-systolic" step="1" inputmode="numeric" placeholder="120"></div>';
+  html += '<div class="field"><label>Diastolic</label><input type="number" id="v-diastolic" step="1" inputmode="numeric" placeholder="80"></div>';
+  html += '</div>';
+  html += '<div class="field-row">';
+  html += '<div class="field"><label>Heart rate (bpm)</label><input type="number" id="v-heartrate" step="1" inputmode="numeric" placeholder="72"></div>';
+  html += '<div class="field"><label>O2 sat (%)</label><input type="number" id="v-o2sat" step="0.1" inputmode="decimal" placeholder="98"></div>';
+  html += '</div>';
+  html += '<div class="field"><label>Fasting glucose (mg/dL)</label><input type="number" id="v-glucose" step="1" inputmode="numeric" placeholder="90"></div>';
+  html += '<button class="btn btn-primary" onclick="logVitals(' + patientId + ')">Save vitals</button>';
+  html += '<div id="v-flash" class="flash-msg"></div>';
+  html += '</div></div>';
   html += '</div>';
   return html;
 }
@@ -1494,6 +1537,22 @@ async function logMeasurements(patientId) {
     flash('ms-flash', '\u2713 Saved');
     loadProgress();
   } catch (err) { flash('ms-flash', err.message, true); }
+}
+
+async function logVitals(patientId) {
+  function v(id){ var el = document.getElementById(id); return (el && el.value !== '') ? el.value : null; }
+  try {
+    await POST('/api/checkins/', {
+      date:                document.getElementById('v-date').value,
+      systolic:            v('v-systolic'),
+      diastolic:           v('v-diastolic'),
+      heart_rate:          v('v-heartrate'),
+      o2_sat_pct:          v('v-o2sat'),
+      blood_sugar_fasting: v('v-glucose'),
+    });
+    flash('v-flash', '\u2713 Saved');
+    loadProgress();
+  } catch (err) { flash('v-flash', err.message, true); }
 }
 
 
