@@ -320,6 +320,13 @@ async function loadToday() {
   loadTodayLog();
 }
 
+async function moveProtocol(protocolId, direction) {
+  try {
+    await POST('/api/protocols/' + protocolId + '/move-' + direction, {});
+    loadTodayLog();
+  } catch (err) { alert(err.message); }
+}
+
 async function loadTodayLog() {
   try {
     const me        = await GET('/auth/me');
@@ -674,11 +681,17 @@ function renderToday(el, protocols, takenIds, skippedIds, offScheduleLogs, taken
 
   const multiProto = protocols.length > 1;
   if (multiProto) {
-    protocols.forEach(function(proto) {
+    var sortedProtocols = protocols.slice().sort(function(a, b) { return (a.position || 0) - (b.position || 0); });
+    sortedProtocols.forEach(function(proto, idx) {
       var protoItems = allItems.filter(function(e) { return e.protoName === proto.name; });
       if (!protoItems.length) return;
       protoItems = sortByTakenThenTime(protoItems, function(e) { return e.item; }, takenIds);
-      html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin:16px 0 6px">' + proto.name + '</div>';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 6px">';
+      html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent)">' + proto.name + '</div>';
+      html += '<div style="display:flex;gap:4px">';
+      html += '<button onclick="moveProtocol(' + proto.id + ', \'up\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:22px;height:22px;font-size:11px;cursor:pointer"' + (idx === 0 ? ' disabled' : '') + '>\u2191</button>';
+      html += '<button onclick="moveProtocol(' + proto.id + ', \'down\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:22px;height:22px;font-size:11px;cursor:pointer"' + (idx === sortedProtocols.length - 1 ? ' disabled' : '') + '>\u2193</button>';
+      html += '</div></div>';
       protoItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds, takenTimes); });
     });
   } else {

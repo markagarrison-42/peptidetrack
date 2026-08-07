@@ -173,6 +173,7 @@ class Protocol(db.Model):
     review_date      = db.Column(db.Date,        nullable=True)
     notes            = db.Column(db.Text,        nullable=True)
     active           = db.Column(db.Boolean,     default=True)
+    position         = db.Column(db.Integer,     default=0, nullable=False)
     created_at       = db.Column(db.DateTime,    default=datetime.utcnow)
     updated_at       = db.Column(db.DateTime,    default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -189,6 +190,7 @@ class Protocol(db.Model):
             "review_date":     self.review_date.isoformat() if self.review_date else None,
             "notes":           self.notes,
             "active":          self.active,
+            "position":        self.position,
             "items":           [i.to_dict() for i in self.items],
         }
 

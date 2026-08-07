@@ -136,6 +136,34 @@ def delete_item(item_id):
     return jsonify({"message": "Removed"}), 200
 
 
+@protocols_bp.route("/<int:protocol_id>/move-up", methods=["POST"])
+@login_required
+def move_up(protocol_id):
+    p = Protocol.query.get_or_404(protocol_id)
+    neighbor = Protocol.query.filter(
+        Protocol.patient_id == p.patient_id,
+        Protocol.position < p.position
+    ).order_by(Protocol.position.desc()).first()
+    if neighbor:
+        p.position, neighbor.position = neighbor.position, p.position
+        db.session.commit()
+    return jsonify(p.to_dict()), 200
+
+
+@protocols_bp.route("/<int:protocol_id>/move-down", methods=["POST"])
+@login_required
+def move_down(protocol_id):
+    p = Protocol.query.get_or_404(protocol_id)
+    neighbor = Protocol.query.filter(
+        Protocol.patient_id == p.patient_id,
+        Protocol.position > p.position
+    ).order_by(Protocol.position.asc()).first()
+    if neighbor:
+        p.position, neighbor.position = neighbor.position, p.position
+        db.session.commit()
+    return jsonify(p.to_dict()), 200
+
+
 @protocols_bp.route("/<int:protocol_id>/suggest-dose", methods=["GET"])
 @login_required
 def suggest_dose(protocol_id):
