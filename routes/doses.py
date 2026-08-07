@@ -26,9 +26,11 @@ def today():
     except ValueError:
         today_date = date.today()
     logs = DoseLog.query.filter_by(patient_id=patient_id, date=today_date).all()
-    taken_ids   = [l.protocol_item_id for l in logs if not l.skipped]
+    taken_ids   = [l.protocol_item_id for l in logs if not l.skipped and not l.off_schedule]
     skipped_ids = [l.protocol_item_id for l in logs if l.skipped]
-    return jsonify({"date": today_date.isoformat(), "taken_item_ids": taken_ids, "skipped_item_ids": skipped_ids}), 200
+    off_schedule_logs = [l.to_dict() for l in logs if l.off_schedule]
+    taken_times = {l.protocol_item_id: l.time for l in logs if not l.skipped and not l.off_schedule}
+    return jsonify({"date": today_date.isoformat(), "taken_item_ids": taken_ids, "skipped_item_ids": skipped_ids, "off_schedule_logs": off_schedule_logs, "taken_times": taken_times}), 200
 
 
 @doses_bp.route("/toggle", methods=["POST"])
@@ -60,6 +62,7 @@ def toggle():
             patient_id=patient_id,
             protocol_item_id=item_id,
             date=today_date,
+            time=data.get("local_time"),
             dose_mg_taken=float(data.get("dose_mg_taken") or item.dose_mg),
             injection_site=data.get("injection_site"),
             notes=data.get("notes"),

@@ -284,6 +284,7 @@ async function confirmDoseModal() {
         protocol_item_id: itemId,
         dose_mg_taken:    amount,
         local_date:       localDate,
+        local_time:       new Date().toLocaleTimeString('en-US', { hour12: false }),
         notes:            notes,
       });
     } else {
@@ -291,6 +292,7 @@ async function confirmDoseModal() {
         protocol_item_id: itemId,
         dose_mg_taken:    amount,
         local_date:       localDate,
+        local_time:       new Date().toLocaleTimeString('en-US', { hour12: false }),
         notes:            notes,
       });
     }
@@ -327,7 +329,7 @@ async function loadTodayLog() {
     const active    = protocols.filter(function(p) { return p.active; });
     S.protocols     = protocols;
     const logPanel  = document.getElementById('today-log-panel');
-    if (logPanel) renderToday(logPanel, active, todayData.taken_item_ids || [], todayData.skipped_item_ids || []);
+    if (logPanel) renderToday(logPanel, active, todayData.taken_item_ids || [], todayData.skipped_item_ids || [], todayData.off_schedule_logs || [], todayData.taken_times || {});
   } catch (err) {
     const logPanel = document.getElementById('today-log-panel');
     if (logPanel) logPanel.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div>' + err.message + '</div>';
@@ -587,6 +589,21 @@ async function deleteLog(logId) {
   } catch (err) { alert(err.message); }
 }
 
+function sortByTakenThenTime(entries, getItem, takenIds) {
+  return entries.slice().sort(function(a, b) {
+    var aTaken = takenIds.includes(getItem(a).id);
+    var bTaken = takenIds.includes(getItem(b).id);
+    if (aTaken && !bTaken) return -1;
+    if (!aTaken && bTaken) return 1;
+    var ta = getItem(a).reminder_time;
+    var tb = getItem(b).reminder_time;
+    if (!ta && !tb) return 0;
+    if (!ta) return 1;
+    if (!tb) return -1;
+    return ta.localeCompare(tb);
+  });
+}
+
 function sortByReminderTime(entries, getItem) {
   return entries.slice().sort(function(a, b) {
     var ta = getItem(a).reminder_time;
@@ -606,7 +623,7 @@ function sortByCompoundName(entries, getItem) {
   });
 }
 
-function renderToday(el, protocols, takenIds, skippedIds) {
+function renderToday(el, protocols, takenIds, skippedIds, offScheduleLogs, takenTimes) {
   const dayName  = fmtDay();
   const dateFull = fmtMonthDay();
   const todayDay = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
@@ -660,13 +677,13 @@ function renderToday(el, protocols, takenIds, skippedIds) {
     protocols.forEach(function(proto) {
       var protoItems = allItems.filter(function(e) { return e.protoName === proto.name; });
       if (!protoItems.length) return;
-      protoItems = sortByReminderTime(protoItems, function(e) { return e.item; });
+      protoItems = sortByTakenThenTime(protoItems, function(e) { return e.item; }, takenIds);
       html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin:16px 0 6px">' + proto.name + '</div>';
-      protoItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds); });
+      protoItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds, takenTimes); });
     });
   } else {
-    var sortedItems = sortByReminderTime(allItems, function(e) { return e.item; });
-    sortedItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds); });
+    var sortedItems = sortByTakenThenTime(allItems, function(e) { return e.item; }, takenIds);
+    sortedItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds, takenTimes); });
   }
 
   html += '</div>';
@@ -712,7 +729,7 @@ function renderToday(el, protocols, takenIds, skippedIds) {
   el.innerHTML = html;
 }
 
-function renderDoseCard(item, takenIds, skippedIds) {
+function renderDoseCard(item, takenIds, skippedIds, takenTimes) {
   var isTaken   = takenIds.includes(item.id);
   var isSkipped = (skippedIds || []).includes(item.id);
   var doseUnit  = (item.notes && item.notes.startsWith('unit:')) ? item.notes.split(':')[1] : 'mg';
@@ -737,6 +754,7 @@ function renderDoseCard(item, takenIds, skippedIds) {
   if (item.route)     html += ' · ' + item.route;
   if (item.timing)    html += ' · ' + item.timing;
   if (item.reminder_time) html += ' · \ud83d\udd14 ' + fmt12hr(item.reminder_time);
+  if (isTaken && takenTimes && takenTimes[item.id]) html += ' · logged ' + fmt12hr(takenTimes[item.id]);
   html += '</div>';
   if (item.dose_units) {
     html += '<div class="dose-units-badge">💉 ' + item.dose_units + ' units</div>';
@@ -771,6 +789,38 @@ async function handleSkipTap(btn) {
     await POST('/api/doses/skip', { protocol_item_id: itemId, local_date: new Date().toLocaleDateString('en-CA') });
     loadTodayLog();
   } catch (err) { alert(err.message); }
+}
+
+function renderOffScheduleLogs(offScheduleLogs) {
+  if (!offScheduleLogs || !offScheduleLogs.length) return '';
+  var html = '<div class="section" style="margin-top:16px">';
+  html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin:0 0 6px">Logged off-schedule today</div>';
+  offScheduleLogs.forEach(function(log) {
+    html += '<div class="dose-card taken" style="opacity:0.85">';
+    html += '<div class="dose-check checked" style="pointer-events:none"><span class="dose-check-symbol">\u2713</span></div>';
+    html += '<div class="dose-info">';
+    html += '<div class="dose-name">' + (log.compound_name || 'Unknown') + '</div>';
+    html += '<div class="dose-meta">' + (log.dose_mg_taken || '\u2014') + ' mg \u00b7 off-schedule</div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderOffScheduleLogs(offScheduleLogs) {
+  if (!offScheduleLogs || !offScheduleLogs.length) return '';
+  var html = '<div class="section" style="margin-top:16px">';
+  html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin:0 0 6px">Logged off-schedule today</div>';
+  offScheduleLogs.forEach(function(log) {
+    html += '<div class="dose-card taken" style="opacity:0.85">';
+    html += '<div class="dose-check checked" style="pointer-events:none"><span class="dose-check-symbol">\u2713</span></div>';
+    html += '<div class="dose-info">';
+    html += '<div class="dose-name">' + (log.compound_name || 'Unknown') + '</div>';
+    html += '<div class="dose-meta">' + (log.dose_mg_taken || '\u2014') + ' mg \u00b7 off-schedule</div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  return html;
 }
 
 function renderUnscheduledSection(protocols) {
