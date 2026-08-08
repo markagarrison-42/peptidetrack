@@ -689,8 +689,8 @@ function renderToday(el, protocols, takenIds, skippedIds, offScheduleLogs, taken
       html += '<div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 6px">';
       html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent)">' + proto.name + '</div>';
       html += '<div style="display:flex;gap:4px">';
-      html += '<button onclick="moveProtocol(' + proto.id + ', \'up\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:22px;height:22px;font-size:11px;cursor:pointer"' + (idx === 0 ? ' disabled' : '') + '>\u2191</button>';
-      html += '<button onclick="moveProtocol(' + proto.id + ', \'down\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:22px;height:22px;font-size:11px;cursor:pointer"' + (idx === sortedProtocols.length - 1 ? ' disabled' : '') + '>\u2193</button>';
+      html += '<button onclick="moveProtocol(' + proto.id + ', \'up\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:36px;height:36px;font-size:16px;cursor:pointer"' + (idx === 0 ? ' disabled' : '') + '>\u2191</button>';
+      html += '<button onclick="moveProtocol(' + proto.id + ', \'down\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:36px;height:36px;font-size:16px;cursor:pointer"' + (idx === sortedProtocols.length - 1 ? ' disabled' : '') + '>\u2193</button>';
       html += '</div></div>';
       protoItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds, takenTimes); });
     });
