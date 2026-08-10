@@ -21,6 +21,8 @@ def get_for_patient(patient_id):
 def create():
     data = request.get_json()
     patient_id = int(data["patient_id"]) if data.get("patient_id") else current_user.id
+    max_position = db.session.query(db.func.max(Protocol.position)).filter(Protocol.patient_id == patient_id).scalar()
+    next_position = (max_position + 1) if max_position is not None else 0
     p = Protocol(
         patient_id=patient_id,
         practitioner_id=current_user.id,
@@ -29,6 +31,7 @@ def create():
         start_date=date.fromisoformat(data["start_date"]) if data.get("start_date") else None,
         review_date=date.fromisoformat(data["review_date"]) if data.get("review_date") else None,
         notes=data.get("notes"),
+        position=next_position,
     )
     db.session.add(p)
     db.session.commit()
@@ -53,6 +56,20 @@ def update(protocol_id):
     return jsonify(p.to_dict()), 200
 
 
+@protocols_bp.route("/<int:protocol_id>", methods=["DELETE"])
+@login_required
+def delete_protocol(protocol_id):
+    p = Protocol.query.get_or_404(protocol_id)
+    if current_user.role == 'patient' and p.patient_id != current_user.id:
+        return jsonify({"error": "Unauthorized"}), 403
+    active_items = ProtocolItem.query.filter_by(protocol_id=protocol_id, active=True).count()
+    if active_items > 0:
+        return jsonify({"error": "Move or remove all compounds before deleting this protocol"}), 400
+    db.session.delete(p)
+    db.session.commit()
+    return jsonify({"deleted": True}), 200
+
+
 @protocols_bp.route("/<int:protocol_id>/items", methods=["POST"])
 @login_required
 def add_item(protocol_id):
@@ -70,6 +87,7 @@ def add_item(protocol_id):
         fixed_concentration_mg_per_ml=float(data["fixed_concentration_mg_per_ml"]) if data.get("fixed_concentration_mg_per_ml") else None,
         cycle_start_date=date.fromisoformat(data["cycle_start_date"]) if data.get("cycle_start_date") else None,
         cycle_end_date=date.fromisoformat(data["cycle_end_date"]) if data.get("cycle_end_date") else None,
+        reminder_time=data.get("reminder_time"),
         notes=data.get("notes"),
     )
     db.session.add(item)
@@ -114,6 +132,14 @@ def update_item(item_id):
     for field in ("cycle_start_date", "cycle_end_date"):
         if field in data:
             setattr(item, field, date.fromisoformat(data[field]) if data[field] else None)
+    if "protocol_id" in data:
+        new_protocol_id = int(data["protocol_id"])
+        new_protocol = Protocol.query.get_or_404(new_protocol_id)
+        if current_user.role == 'patient' and new_protocol.patient_id != current_user.id:
+            return jsonify({"error": "Unauthorized"}), 403
+        if new_protocol.patient_id != item.protocol.patient_id:
+            return jsonify({"error": "Cannot move compound to a different patient's protocol"}), 400
+        item.protocol_id = new_protocol_id
     if "dose_mg" in data:
         item.dose_overridden = True
     if "dose_overridden" in data:

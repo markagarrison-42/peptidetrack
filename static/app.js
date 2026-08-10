@@ -320,6 +320,16 @@ async function loadToday() {
   loadTodayLog();
 }
 
+async function deleteProtocolPrompt(protocolId, protocolName) {
+  if (!confirm('Delete "' + protocolName + '"? This cannot be undone.')) return;
+  try {
+    await DEL('/api/protocols/' + protocolId);
+    loadProtocol();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
 async function moveProtocol(protocolId, direction) {
   try {
     await POST('/api/protocols/' + protocolId + '/move-' + direction, {});
@@ -687,10 +697,11 @@ function renderToday(el, protocols, takenIds, skippedIds, offScheduleLogs, taken
       if (!protoItems.length) return;
       protoItems = sortByTakenThenTime(protoItems, function(e) { return e.item; }, takenIds);
       html += '<div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 6px">';
-      html += '<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent)">' + proto.name + '</div>';
+      html += '<div style="display:inline-block;font-size:20px;font-weight:700;letter-spacing:-0.2px;color:var(--accent);background:var(--accent-dim);padding:4px 12px;border-radius:8px">' + proto.name + '</div>';
       html += '<div style="display:flex;gap:4px">';
       html += '<button onclick="moveProtocol(' + proto.id + ', \'up\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:36px;height:36px;font-size:16px;cursor:pointer"' + (idx === 0 ? ' disabled' : '') + '>\u2191</button>';
       html += '<button onclick="moveProtocol(' + proto.id + ', \'down\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:36px;height:36px;font-size:16px;cursor:pointer"' + (idx === sortedProtocols.length - 1 ? ' disabled' : '') + '>\u2193</button>';
+
       html += '</div></div>';
       protoItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds, takenTimes); });
     });
@@ -952,7 +963,7 @@ function renderProtocolCard(proto, patientId) {
 
   html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">';
   html += '<div style="flex:1">';
-  html += '<div style="font-size:17px;font-weight:700;letter-spacing:-0.3px">' + proto.name + '</div>';
+  html += '<div style="display:inline-block;font-size:22px;font-weight:700;letter-spacing:-0.3px;color:var(--accent);background:var(--accent-dim);padding:4px 12px;border-radius:8px">' + proto.name + '</div>';
   if (proto.start_date) {
     html += '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px">Started ' + fmtDateShort(proto.start_date) + (weeksOn !== null ? ' &nbsp;·&nbsp; Week ' + weeksOn : '') + '</div>';
   }
@@ -960,6 +971,7 @@ function renderProtocolCard(proto, patientId) {
   html += '<div style="display:flex;gap:6px;align-items:center">';
   html += '<button onclick="toggleProtocolActive(' + proto.id + ', ' + patientId + ')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:' + (isActive ? 'var(--accent)' : 'transparent') + ';color:' + (isActive ? '#080f1a' : 'var(--muted)') + ';font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer">' + (isActive ? 'ACTIVE' : 'PAUSED') + '</button>';
   html += '<button onclick="editProtocolName(' + proto.id + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:var(--sans);font-size:12px;cursor:pointer">Edit</button>';
+  html += '<button onclick="deleteProtocolPrompt(' + proto.id + ', \'' + proto.name.replace(/'/g, "\\'") + '\')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--red);font-family:var(--sans);font-size:12px;cursor:pointer">Delete</button>';
   html += '</div></div>';
 
   if (!items.length) {
@@ -1187,17 +1199,18 @@ async function addMyCompound(protocolId) {
 
 function editCompoundItem(itemId, patientId) {
   let foundItem = null;
+  let foundProtocolId = null;
   (S.protocols || []).forEach(function(proto) {
     (proto.items || []).forEach(function(item) {
-      if (item.id === itemId) foundItem = item;
+      if (item.id === itemId) { foundItem = item; foundProtocolId = proto.id; }
     });
   });
   if (!foundItem) return;
   const unit = (foundItem.notes && foundItem.notes.startsWith('unit:')) ? foundItem.notes.split(':')[1] : 'mg';
-  showEditCompoundModal(itemId, foundItem.compound_name, foundItem.dose_mg, unit, foundItem.frequency, foundItem.route, foundItem.timing, foundItem.vial_size_mg, foundItem.recon_volume_ml, foundItem);
+  showEditCompoundModal(itemId, foundItem.compound_name, foundItem.dose_mg, unit, foundItem.frequency, foundItem.route, foundItem.timing, foundItem.vial_size_mg, foundItem.recon_volume_ml, foundItem, foundProtocolId);
 }
 
-function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timing, vialSize, reconVol, foundItem) {
+function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timing, vialSize, reconVol, foundItem, currentProtocolId) {
   const modal = document.getElementById('edit-compound-modal');
   document.getElementById('ecm-item-id').value    = itemId;
   document.getElementById('ecm-name').textContent = name;
@@ -1251,6 +1264,17 @@ function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timin
   } else {
     if (document.getElementById('ecm-premixed')) document.getElementById('ecm-premixed').closest('.field').style.display = 'block';
     toggleEcmPremixed();
+  }
+  var protoSel = document.getElementById('ecm-protocol');
+  if (protoSel) {
+    protoSel.innerHTML = '';
+    (S.protocols || []).forEach(function(proto) {
+      var opt = document.createElement('option');
+      opt.value = proto.id;
+      opt.textContent = proto.name;
+      if (proto.id === currentProtocolId) opt.selected = true;
+      protoSel.appendChild(opt);
+    });
   }
   modal.classList.add('open');
 }
@@ -1309,6 +1333,8 @@ async function saveEditCompoundModal() {
     const reminder = document.getElementById('ecm-reminder') ? document.getElementById('ecm-reminder').value || null : null;
     const cycleStart = document.getElementById('ecm-cycle-start') ? document.getElementById('ecm-cycle-start').value || null : null;
     const cycleEnd   = document.getElementById('ecm-cycle-end') ? document.getElementById('ecm-cycle-end').value || null : null;
+    const protoSel = document.getElementById('ecm-protocol');
+    const newProtocolId = protoSel ? parseInt(protoSel.value) : null;
     await PUT('/api/protocols/items/' + itemId, {
       dose_mg:         dose,
       timing:          timing || null,
@@ -1320,6 +1346,7 @@ async function saveEditCompoundModal() {
       reminder_time:   reminder,
       cycle_start_date: cycleStart,
       cycle_end_date:   cycleEnd,
+      protocol_id:      newProtocolId,
     });
     closeEditCompoundModal();
     loadProtocol();
