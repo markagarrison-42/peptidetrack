@@ -606,6 +606,21 @@ async function deleteLog(logId) {
   } catch (err) { alert(err.message); }
 }
 
+function sortByUpcomingFirst(entries, getItem, takenIds) {
+  return entries.slice().sort(function(a, b) {
+    var aTaken = takenIds.includes(getItem(a).id);
+    var bTaken = takenIds.includes(getItem(b).id);
+    if (!aTaken && bTaken) return -1;
+    if (aTaken && !bTaken) return 1;
+    var ta = getItem(a).reminder_time;
+    var tb = getItem(b).reminder_time;
+    if (!ta && !tb) return 0;
+    if (!ta) return 1;
+    if (!tb) return -1;
+    return ta.localeCompare(tb);
+  });
+}
+
 function sortByTakenThenTime(entries, getItem, takenIds) {
   return entries.slice().sort(function(a, b) {
     var aTaken = takenIds.includes(getItem(a).id);
@@ -644,6 +659,7 @@ function renderToday(el, protocols, takenIds, skippedIds, offScheduleLogs, taken
   const dayName  = fmtDay();
   const dateFull = fmtMonthDay();
   const todayDay = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
+  const todayISO = new Date().toLocaleDateString('en-CA');
 
   let html = safetyBanner() + '<div class="date-header">';
   html += '<span class="date-day">' + dayName + '</span>';
@@ -662,6 +678,8 @@ function renderToday(el, protocols, takenIds, skippedIds, offScheduleLogs, taken
     proto.items.forEach(function(item) {
       if (!item.active) return;
       if (item.frequency === 'As needed') return;
+      if (item.cycle_start_date && item.cycle_start_date > todayISO) return;
+      if (item.cycle_end_date && item.cycle_end_date < todayISO) return;
       const nonSpecific = ['Daily','Weekly','Twice daily','3x/week','Monthly'];
       if (item.frequency && !nonSpecific.includes(item.frequency)) {
         const days = item.frequency.split(',').map(function(d) { return d.trim(); });
@@ -689,26 +707,8 @@ function renderToday(el, protocols, takenIds, skippedIds, offScheduleLogs, taken
   html += '<div style="font-family:var(--mono);font-size:28px;font-weight:700;color:' + (pct === 100 ? 'var(--green)' : 'var(--muted)') + '">' + pct + '<span style="font-size:14px;color:var(--muted)">%</span></div>';
   html += '</div>';
 
-  const multiProto = protocols.length > 1;
-  if (multiProto) {
-    var sortedProtocols = protocols.slice().sort(function(a, b) { return (a.position || 0) - (b.position || 0); });
-    sortedProtocols.forEach(function(proto, idx) {
-      var protoItems = allItems.filter(function(e) { return e.protoName === proto.name; });
-      if (!protoItems.length) return;
-      protoItems = sortByTakenThenTime(protoItems, function(e) { return e.item; }, takenIds);
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 6px">';
-      html += '<div style="display:inline-block;font-size:20px;font-weight:700;letter-spacing:-0.2px;color:var(--accent);background:var(--accent-dim);padding:4px 12px;border-radius:8px">' + proto.name + '</div>';
-      html += '<div style="display:flex;gap:4px">';
-      html += '<button onclick="moveProtocol(' + proto.id + ', \'up\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:36px;height:36px;font-size:16px;cursor:pointer"' + (idx === 0 ? ' disabled' : '') + '>\u2191</button>';
-      html += '<button onclick="moveProtocol(' + proto.id + ', \'down\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:36px;height:36px;font-size:16px;cursor:pointer"' + (idx === sortedProtocols.length - 1 ? ' disabled' : '') + '>\u2193</button>';
-
-      html += '</div></div>';
-      protoItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds, takenTimes); });
-    });
-  } else {
-    var sortedItems = sortByTakenThenTime(allItems, function(e) { return e.item; }, takenIds);
-    sortedItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds, takenTimes); });
-  }
+  var sortedItems = sortByUpcomingFirst(allItems, function(e) { return e.item; }, takenIds);
+  sortedItems.forEach(function(e) { html += renderDoseCard(e.item, takenIds, skippedIds, takenTimes); });
 
   html += '</div>';
 
@@ -932,7 +932,8 @@ function renderProtocol(el, protocols, patientId) {
   } else {
     if (active.length) {
       html += '<div style="padding:20px 20px 4px"><div class="section-label">Active</div></div>';
-      active.forEach(function(proto) { html += renderProtocolCard(proto, patientId); });
+      var sortedActive = active.slice().sort(function(a, b) { return (a.position || 0) - (b.position || 0); });
+      sortedActive.forEach(function(proto, idx) { html += renderProtocolCard(proto, patientId, idx, sortedActive.length); });
     }
     if (inactive.length) {
       html += '<div style="padding:12px 20px 4px"><div class="section-label">Paused</div></div>';
@@ -952,7 +953,7 @@ function renderProtocol(el, protocols, patientId) {
   el.innerHTML = html;
 }
 
-function renderProtocolCard(proto, patientId) {
+function renderProtocolCard(proto, patientId, idx, total) {
   var items    = proto.items ? proto.items.filter(function(i) { return i.active; }) : [];
   items = sortByCompoundName(items, function(i) { return i; });
   const weeksOn  = proto.start_date ? Math.floor((new Date() - new Date(proto.start_date + 'T00:00:00')) / (7 * 24 * 60 * 60 * 1000)) : null;
@@ -968,11 +969,18 @@ function renderProtocolCard(proto, patientId) {
     html += '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px">Started ' + fmtDateShort(proto.start_date) + (weeksOn !== null ? ' &nbsp;·&nbsp; Week ' + weeksOn : '') + '</div>';
   }
   html += '</div>';
-  html += '<div style="display:flex;gap:6px;align-items:center">';
+  if (isActive && typeof idx === 'number') {
+    html += '<div style="display:flex;gap:4px;align-items:center;flex-shrink:0">';
+    html += '<button onclick="moveProtocol(' + proto.id + ', \'up\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:28px;height:28px;font-size:13px;cursor:pointer"' + (idx === 0 ? ' disabled' : '') + '>\u2191</button>';
+    html += '<button onclick="moveProtocol(' + proto.id + ', \'down\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:28px;height:28px;font-size:13px;cursor:pointer"' + (idx === total - 1 ? ' disabled' : '') + '>\u2193</button>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">';
   html += '<button onclick="toggleProtocolActive(' + proto.id + ', ' + patientId + ')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:' + (isActive ? 'var(--accent)' : 'transparent') + ';color:' + (isActive ? '#080f1a' : 'var(--muted)') + ';font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer">' + (isActive ? 'ACTIVE' : 'PAUSED') + '</button>';
   html += '<button onclick="editProtocolName(' + proto.id + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:var(--sans);font-size:12px;cursor:pointer">Edit</button>';
   html += '<button onclick="deleteProtocolPrompt(' + proto.id + ', \'' + proto.name.replace(/'/g, "\\'") + '\')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--red);font-family:var(--sans);font-size:12px;cursor:pointer">Delete</button>';
-  html += '</div></div>';
+  html += '</div>';
 
   if (!items.length) {
     html += '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">No compounds yet — add one below.</div>';
