@@ -145,6 +145,11 @@ def send_dose_reminders():
                 # Skip if already logged or skipped today
                 if item.id in logged_ids:
                     continue
+                # Skip if outside the compound's cycle window
+                if item.cycle_start_date and item.cycle_start_date > today:
+                    continue
+                if item.cycle_end_date and item.cycle_end_date < today:
+                    continue
                 # Skip if not scheduled for today
                 if not is_scheduled_today(item, today_weekday):
                     continue
