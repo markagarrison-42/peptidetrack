@@ -530,3 +530,28 @@ class PushSubscription(db.Model):
             "user_id":  self.user_id,
             "endpoint": self.endpoint,
         }
+
+
+# ── Saved Calculations ─────────────────────────────────
+class SavedCalc(db.Model):
+    __tablename__ = "saved_calcs"
+    id         = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    name       = db.Column(db.String(100), nullable=False)
+    vial_size  = db.Column(db.Float, nullable=False)
+    unit       = db.Column(db.String(10), nullable=False)
+    water      = db.Column(db.Float, nullable=False)
+    dose       = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id":         self.id,
+            "patient_id": self.patient_id,
+            "name":       self.name,
+            "vial_size":  self.vial_size,
+            "unit":       self.unit,
+            "water":      self.water,
+            "dose":       self.dose,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }

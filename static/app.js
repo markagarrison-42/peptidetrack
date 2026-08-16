@@ -962,6 +962,7 @@ function renderProtocolCard(proto, patientId, idx, total) {
   let html = '<div style="padding:0 20px 10px">';
   html += '<div class="card"><div class="card-body">';
 
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-bottom:16px">';
   html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">';
   html += '<div style="flex:1">';
   html += '<div style="display:inline-block;font-size:22px;font-weight:700;letter-spacing:-0.3px;color:var(--accent);background:var(--accent-dim);padding:4px 12px;border-radius:8px">' + proto.name + '</div>';
@@ -970,16 +971,18 @@ function renderProtocolCard(proto, patientId, idx, total) {
   }
   html += '</div>';
   if (isActive && typeof idx === 'number') {
-    html += '<div style="display:flex;gap:4px;align-items:center;flex-shrink:0">';
+    html += '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">';
+    html += '<span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Reorder</span>';
     html += '<button onclick="moveProtocol(' + proto.id + ', \'up\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:28px;height:28px;font-size:13px;cursor:pointer"' + (idx === 0 ? ' disabled' : '') + '>\u2191</button>';
     html += '<button onclick="moveProtocol(' + proto.id + ', \'down\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:28px;height:28px;font-size:13px;cursor:pointer"' + (idx === total - 1 ? ' disabled' : '') + '>\u2193</button>';
     html += '</div>';
   }
   html += '</div>';
-  html += '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">';
+  html += '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">';
   html += '<button onclick="toggleProtocolActive(' + proto.id + ', ' + patientId + ')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:' + (isActive ? 'var(--accent)' : 'transparent') + ';color:' + (isActive ? '#080f1a' : 'var(--muted)') + ';font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer">' + (isActive ? 'ACTIVE' : 'PAUSED') + '</button>';
   html += '<button onclick="editProtocolName(' + proto.id + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:var(--sans);font-size:12px;cursor:pointer">Edit</button>';
   html += '<button onclick="deleteProtocolPrompt(' + proto.id + ', \'' + proto.name.replace(/'/g, "\\'") + '\')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--red);font-family:var(--sans);font-size:12px;cursor:pointer">Delete</button>';
+  html += '</div>';
   html += '</div>';
 
   if (!items.length) {
@@ -2285,6 +2288,8 @@ function loadCalc() {
     '<div style="font-family:var(--mono);font-size:14px;color:var(--muted);margin-top:4px">doses</div>' +
     '</div></div>' +
 
+    '<button onclick="saveCalcAs()" style="width:100%;margin-top:12px;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--accent);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">Save As...</button>' +
+
     '</div></div></div>' +
 
     '<div class="card" style="margin-top:4px"><div class="card-body" style="padding:14px 16px">' +
@@ -2296,7 +2301,72 @@ function loadCalc() {
     '4. Draw to the unit number shown above' +
     '</div></div></div>' +
 
+    '<div class="section-label" style="margin-top:20px">Saved calculations</div>' +
+    '<div id="saved-calcs-list"><div style="font-size:12px;color:var(--muted);padding:8px 0">Loading...</div></div>' +
+
     '</div>';
+  loadSavedCalcs();
+}
+
+async function loadSavedCalcs() {
+  const el = document.getElementById('saved-calcs-list');
+  if (!el) return;
+  try {
+    const calcs = await GET('/api/saved-calcs/');
+    if (!calcs.length) {
+      el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">No saved calculations yet.</div>';
+      return;
+    }
+    let html = '';
+    calcs.forEach(function(calc) {
+      html += '<div class="card" style="margin-bottom:8px"><div class="card-body" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center">';
+      html += '<div onclick="loadSavedCalc(' + calc.id + ')" style="flex:1;cursor:pointer">';
+      html += '<div style="font-size:14px;font-weight:600">' + calc.name + '</div>';
+      html += '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px">' + calc.vial_size + ' ' + calc.unit + ' vial &nbsp;\u00b7&nbsp; ' + calc.water + ' mL water &nbsp;\u00b7&nbsp; ' + calc.dose + ' ' + calc.unit + ' dose</div>';
+      html += '</div>';
+      html += '<button onclick="deleteSavedCalc(' + calc.id + ')" style="background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--red);width:28px;height:28px;font-size:14px;cursor:pointer;flex-shrink:0;margin-left:8px">\u2715</button>';
+      html += '</div></div>';
+    });
+    el.innerHTML = html;
+  } catch (err) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--red);padding:8px 0">' + err.message + '</div>';
+  }
+}
+
+function loadSavedCalc(calcId) {
+  GET('/api/saved-calcs/').then(function(calcs) {
+    const calc = calcs.find(function(c) { return c.id === calcId; });
+    if (!calc) return;
+    document.getElementById('calc-vial').value  = calc.vial_size;
+    document.getElementById('calc-unit').value  = calc.unit;
+    document.getElementById('calc-water').value = calc.water;
+    document.getElementById('calc-dose').value  = calc.dose;
+    updateCalcLabels();
+    runCalc();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+async function deleteSavedCalc(calcId) {
+  if (!confirm('Delete this saved calculation?')) return;
+  try {
+    await DEL('/api/saved-calcs/' + calcId);
+    loadSavedCalcs();
+  } catch (err) { alert(err.message); }
+}
+
+async function saveCalcAs() {
+  const vial  = parseFloat(document.getElementById('calc-vial').value);
+  const water = parseFloat(document.getElementById('calc-water').value);
+  const dose  = parseFloat(document.getElementById('calc-dose').value);
+  const unit  = document.getElementById('calc-unit') ? document.getElementById('calc-unit').value : 'mg';
+  if (!vial || !water || !dose) { alert('Enter vial size, water, and dose first'); return; }
+  const name = prompt('Name this calculation:');
+  if (!name || !name.trim()) return;
+  try {
+    await POST('/api/saved-calcs/', { name: name.trim(), vial_size: vial, unit: unit, water: water, dose: dose });
+    loadSavedCalcs();
+  } catch (err) { alert(err.message); }
 }
 
 function updateCalcLabels() {
