@@ -61,6 +61,7 @@ def create_app():
     from routes.push       import push_bp
     from routes.learn      import learn_bp
     from routes.saved_calcs import saved_calcs_bp
+    from routes.health_sync import health_sync_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp,       url_prefix="/auth")
@@ -75,6 +76,7 @@ def create_app():
     app.register_blueprint(push_bp,       url_prefix="/api/push")
     app.register_blueprint(learn_bp,      url_prefix="/api/learn")
     app.register_blueprint(saved_calcs_bp, url_prefix="/api/saved-calcs")
+    app.register_blueprint(health_sync_bp, url_prefix="/api")
 
     with app.app_context():
         db.create_all()

@@ -555,3 +555,21 @@ class SavedCalc(db.Model):
             "dose":       self.dose,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+
+
+# ── API Tokens (external integrations, e.g. Health Auto Export) ──
+class ApiToken(db.Model):
+    __tablename__ = "api_tokens"
+    id         = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    token      = db.Column(db.String(64), nullable=False, unique=True)
+    label      = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id":         self.id,
+            "patient_id": self.patient_id,
+            "label":      self.label,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
