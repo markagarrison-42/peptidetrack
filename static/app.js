@@ -973,15 +973,15 @@ function renderProtocolCard(proto, patientId, idx, total) {
   if (isActive && typeof idx === 'number') {
     html += '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">';
     html += '<span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Reorder</span>';
-    html += '<button onclick="moveProtocol(' + proto.id + ', \'up\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:28px;height:28px;font-size:13px;cursor:pointer"' + (idx === 0 ? ' disabled' : '') + '>\u2191</button>';
-    html += '<button onclick="moveProtocol(' + proto.id + ', \'down\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:28px;height:28px;font-size:13px;cursor:pointer"' + (idx === total - 1 ? ' disabled' : '') + '>\u2193</button>';
+    html += '<button onclick="moveProtocol(' + proto.id + ', \'up\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:40px;height:40px;font-size:15px;cursor:pointer"' + (idx === 0 ? ' disabled' : '') + '>\u2191</button>';
+    html += '<button onclick="moveProtocol(' + proto.id + ', \'down\')" style="background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--muted);width:40px;height:40px;font-size:15px;cursor:pointer"' + (idx === total - 1 ? ' disabled' : '') + '>\u2193</button>';
     html += '</div>';
   }
   html += '</div>';
   html += '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">';
-  html += '<button onclick="toggleProtocolActive(' + proto.id + ', ' + patientId + ')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:' + (isActive ? 'var(--accent)' : 'transparent') + ';color:' + (isActive ? '#080f1a' : 'var(--muted)') + ';font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer">' + (isActive ? 'ACTIVE' : 'PAUSED') + '</button>';
-  html += '<button onclick="editProtocolName(' + proto.id + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:var(--sans);font-size:12px;cursor:pointer">Edit</button>';
-  html += '<button onclick="deleteProtocolPrompt(' + proto.id + ', \'' + proto.name.replace(/'/g, "\\'") + '\')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--red);font-family:var(--sans);font-size:12px;cursor:pointer">Delete</button>';
+  html += '<button onclick="toggleProtocolActive(' + proto.id + ', ' + patientId + ')" style="padding:11px 16px;border-radius:6px;border:1px solid var(--border2);background:' + (isActive ? 'var(--accent)' : 'transparent') + ';color:' + (isActive ? '#080f1a' : 'var(--muted)') + ';font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer">' + (isActive ? 'ACTIVE' : 'PAUSED') + '</button>';
+  html += '<button onclick="editProtocolName(' + proto.id + ')" style="padding:11px 14px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:var(--sans);font-size:12px;cursor:pointer">Edit</button>';
+  html += '<button onclick="deleteProtocolPrompt(' + proto.id + ', \'' + proto.name.replace(/'/g, "\\'") + '\')" style="padding:11px 14px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--red);font-family:var(--sans);font-size:12px;cursor:pointer">Delete</button>';
   html += '</div>';
   html += '</div>';
 
@@ -1019,8 +1019,8 @@ function renderProtocolCard(proto, patientId, idx, total) {
       }
       html += '</div>';
       html += '<div style="display:flex;gap:6px;flex-shrink:0">';
-      html += '<button onclick="editCompoundItem(' + item.id + ', ' + patientId + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer">Edit</button>';
-      html += '<button onclick="removeCompoundItem(' + item.id + ', ' + patientId + ')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--red);font-size:12px;cursor:pointer">✕</button>';
+      html += '<button onclick="editCompoundItem(' + item.id + ', ' + patientId + ')" style="padding:11px 14px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer">Edit</button>';
+      html += '<button onclick="removeCompoundItem(' + item.id + ', ' + patientId + ')" style="padding:11px 14px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--red);font-size:12px;cursor:pointer">✕</button>';
       html += '</div></div>';
       // Syringe guide (same compound block) - works for both reconstituted and pre-mixed
       if (item.dose_units) {
@@ -1083,7 +1083,7 @@ function renderAddCompoundForm(protocolId) {
   html += '<div class="field" id="ac-days-' + protocolId + '" style="display:none"><label>Specific days</label>';
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">';
   ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(d) {
-    html += '<button type="button" id="ac-day-' + protocolId + '-' + d + '" data-day="' + d + '" onclick="toggleDayBtn(this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all 0.15s;min-width:44px">' + d + '</button>';
+    html += '<button type="button" id="ac-day-' + protocolId + '-' + d + '" data-day="' + d + '" onclick="toggleDayBtn(this)" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all 0.15s;min-width:44px;min-height:44px">' + d + '</button>';
   });
   html += '</div></div>';
   html += '<div class="field"><label>Comes pre-mixed?</label><select id="ac-premixed-' + protocolId + '" onchange="togglePremixed(' + protocolId + ')"><option value="no">No - I reconstitute it</option><option value="yes">Yes - ready to inject</option></select></div>';
@@ -2334,7 +2334,7 @@ async function loadSavedCalcs() {
       html += '<div style="font-size:14px;font-weight:600">' + calc.name + '</div>';
       html += '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px">' + calc.vial_size + ' ' + calc.unit + ' vial &nbsp;\u00b7&nbsp; ' + calc.water + ' mL water &nbsp;\u00b7&nbsp; ' + calc.dose + ' ' + calc.unit + ' dose</div>';
       html += '</div>';
-      html += '<button onclick="deleteSavedCalc(' + calc.id + ')" style="background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--red);width:28px;height:28px;font-size:14px;cursor:pointer;flex-shrink:0;margin-left:8px">\u2715</button>';
+      html += '<button onclick="deleteSavedCalc(' + calc.id + ')" style="background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--red);width:40px;height:40px;font-size:16px;cursor:pointer;flex-shrink:0;margin-left:8px">\u2715</button>';
       html += '</div></div>';
     });
     el.innerHTML = html;

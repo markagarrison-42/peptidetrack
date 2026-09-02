@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="/static/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
   <style>
     :root { color-scheme: dark; }
     input, textarea, select { color-scheme: dark; }
@@ -107,7 +107,7 @@
     }
 
     #topbar-logo {
-      font-family: var(--sans);
+      font-family: 'Russo One', var(--sans);
       font-size: 17px;
       font-weight: 700;
       letter-spacing: -0.3px;
@@ -216,7 +216,7 @@
     }
 
     .auth-mark {
-      font-family: var(--sans);
+      font-family: 'Russo One', var(--sans);
       font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.15em;
@@ -626,8 +626,8 @@
     }
 
     .unscheduled-toggle {
-      width: 28px;
-      height: 28px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       border: 1px solid var(--border2);
       background: transparent;
@@ -1756,6 +1756,7 @@
       font-weight: 600;
       cursor: pointer;
       min-width: 44px;
+      min-height: 44px;
       -webkit-tap-highlight-color: transparent;
     }
     .day-btn-active,
@@ -1914,7 +1915,8 @@
     /* ── SKIP BUTTON ── */
     .skip-btn {
       flex-shrink: 0;
-      padding: 6px 12px;
+      padding: 11px 16px;
+      min-height: 44px;
       border-radius: 8px;
       border: 1px solid var(--border2);
       background: transparent;
