@@ -1186,13 +1186,14 @@ async function addMyCompound(protocolId) {
     const injectable = ['SubQ', 'IM', 'IV'].includes(route);
     const premixedEl  = document.getElementById('ac-premixed-' + protocolId);
     const isPremixed  = premixedEl ? (premixedEl.value === 'yes') : false;
+    const doseMgConverted = (unit === 'mcg' || unit === 'g') ? massToMg(parseFloat(dose), unit) : parseFloat(dose);
     const compound   = await POST('/api/compounds/', {
       name, category: 'Other',
       default_route: route, frequency: frequency,
     });
     await POST('/api/protocols/' + protocolId + '/items', {
       compound_id:     compound.id,
-      dose_mg:         parseFloat(dose),
+      dose_mg:         doseMgConverted,
       frequency:       frequency,
       route:           route,
       timing:          document.getElementById('ac-timing-' + protocolId).value || null,
@@ -1221,12 +1222,17 @@ function editCompoundItem(itemId, patientId) {
   showEditCompoundModal(itemId, foundItem.compound_name, foundItem.dose_mg, unit, foundItem.frequency, foundItem.route, foundItem.timing, foundItem.vial_size_mg, foundItem.recon_volume_ml, foundItem, foundProtocolId);
 }
 
+let ECM_TRUE_MG = null;
+
 function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timing, vialSize, reconVol, foundItem, currentProtocolId) {
   const modal = document.getElementById('edit-compound-modal');
   document.getElementById('ecm-item-id').value    = itemId;
   document.getElementById('ecm-name').textContent = name;
-  document.getElementById('ecm-dose').value       = dose;
-  document.getElementById('ecm-unit').textContent = unit;
+  ECM_TRUE_MG = dose;
+  const ecmUnitSel = document.getElementById('ecm-unit');
+  if (ecmUnitSel) ecmUnitSel.value = unit;
+  const ecmDoseDisplay = (unit === 'mcg' || unit === 'g') ? mgToUnit(dose, unit) : dose;
+  document.getElementById('ecm-dose').value = ecmDoseDisplay;
   document.getElementById('ecm-timing').value     = timing || '';
   const freqSel = document.getElementById('ecm-frequency');
   const isSpecific = frequency && !['Daily','Weekly','Twice daily','3x/week','Monthly','As needed'].includes(frequency);
@@ -1290,6 +1296,14 @@ function showEditCompoundModal(itemId, name, dose, unit, frequency, route, timin
   modal.classList.add('open');
 }
 
+function updateEcmDoseDisplay() {
+  const unitSel = document.getElementById('ecm-unit');
+  const doseInput = document.getElementById('ecm-dose');
+  if (!unitSel || !doseInput || ECM_TRUE_MG === null) return;
+  const unit = unitSel.value;
+  doseInput.value = (unit === 'mcg' || unit === 'g') ? mgToUnit(ECM_TRUE_MG, unit) : ECM_TRUE_MG;
+}
+
 function toggleEcmPremixed() {
   var sel = document.getElementById('ecm-premixed');
   var mode = sel ? sel.value : 'no';
@@ -1335,6 +1349,8 @@ async function saveEditCompoundModal() {
   const freq    = freqRaw === 'Specific days' ? (getEcmSelectedDays() || 'Specific days') : freqRaw;
   const route   = document.getElementById('ecm-route').value;
   if (isNaN(dose) || dose <= 0) { flash('ecm-flash', 'Enter a valid dose', true); return; }
+  const ecmUnit = document.getElementById('ecm-unit') ? document.getElementById('ecm-unit').value : 'mg';
+  const doseMgConverted = (ecmUnit === 'mcg' || ecmUnit === 'g') ? massToMg(dose, ecmUnit) : dose;
   var premixedSel = document.getElementById('ecm-premixed');
   var isPremixed = premixedSel ? (premixedSel.value === 'yes') : false;
   var vial  = (!isPremixed && document.getElementById('ecm-vial'))  ? parseFloat(document.getElementById('ecm-vial').value)  || null : null;
@@ -1347,7 +1363,8 @@ async function saveEditCompoundModal() {
     const protoSel = document.getElementById('ecm-protocol');
     const newProtocolId = protoSel ? parseInt(protoSel.value) : null;
     await PUT('/api/protocols/items/' + itemId, {
-      dose_mg:         dose,
+      dose_mg:         doseMgConverted,
+      notes:           ecmUnit !== 'mg' ? 'unit:' + ecmUnit : null,
       timing:          timing || null,
       frequency:       freq,
       route:           route,
@@ -2256,8 +2273,21 @@ function loadCalc() {
   const el = document.getElementById('page-calc');
   el.innerHTML =
     safetyBanner() +
+    '<div class="inner-tabs">' +
+    '<button class="inner-tab active" onclick="switchCalcTab(\'single\', this)">Single</button>' +
+    '<button class="inner-tab" onclick="switchCalcTab(\'blend\', this)">Blend</button>' +
+    '</div>' +
+    '<div class="inner-panel active" id="calc-single">' +
     '<div class="section">' +
     '<div class="section-label">Reconstitution calculator</div>' +
+    '<div class="card" style="margin-bottom:12px"><div class="card-body" style="padding:14px 16px">' +
+    '<div style="font-size:11px;color:var(--muted);line-height:1.7">' +
+    '<strong style="color:var(--text)">How to use:</strong><br>' +
+    '1. Enter your vial size (printed on the vial)<br>' +
+    '2. Enter how much bac water you added<br>' +
+    '3. Enter your prescribed dose<br>' +
+    '4. Draw to the unit number shown above' +
+    '</div></div></div>' +
     '<div class="card"><div class="card-body">' +
     '<div class="field-row">' +
     '<div class="field" style="flex:2"><label id="calc-vial-label">Vial size (mg)</label>' +
@@ -2276,6 +2306,7 @@ function loadCalc() {
     '</div></div>' +
     '<div id="calc-result" style="display:none">' +
     '<div class="card"><div class="card-body">' +
+    '<div id="calc-loaded-badge" style="display:none;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:4px 10px;border-radius:6px;margin-bottom:12px"></div>' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">' +
     '<div><div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Concentration</div>' +
     '<div style="font-family:var(--mono);font-size:22px;font-weight:700" id="calc-conc">\u2014</div></div>' +
@@ -2295,18 +2326,367 @@ function loadCalc() {
     '</div></div>' +
     '<button onclick="saveCalcAs()" style="width:100%;margin-top:12px;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--accent);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">Save As...</button>' +
     '</div></div></div>' +
-    '<div class="card" style="margin-top:4px"><div class="card-body" style="padding:14px 16px">' +
-    '<div style="font-size:11px;color:var(--muted);line-height:1.7">' +
-    '<strong style="color:var(--text)">How to use:</strong><br>' +
-    '1. Enter your vial size (printed on the vial)<br>' +
-    '2. Enter how much bac water you added<br>' +
-    '3. Enter your prescribed dose<br>' +
-    '4. Draw to the unit number shown above' +
-    '</div></div></div>' +
     '<div class="section-label" style="margin-top:20px">Saved calculations</div>' +
     '<div id="saved-calcs-list"><div style="font-size:12px;color:var(--muted);padding:8px 0">Loading...</div></div>' +
+    '</div>' +
+    '</div>' +
+    '<div class="inner-panel" id="calc-blend">' +
+    renderBlendPanel() +
     '</div>';
   loadSavedCalcs();
+}
+
+let BLEND_ROW_IDS = [];
+let BLEND_NEXT_ID = 1;
+let BLEND_LAST_EDITED_ID = null;
+let BLEND_EDITING_ID = null;
+let BLEND_LOADED = null;
+
+function renderBlendPanel() {
+  BLEND_ROW_IDS = [1, 2];
+  BLEND_NEXT_ID = 3;
+  BLEND_LAST_EDITED_ID = 1;
+  BLEND_EDITING_ID = null;
+  BLEND_LOADED = null;
+  let html = '<div class="section" style="padding:20px">';
+  html += '<button onclick="startNewBlend()" style="width:100%;margin-bottom:16px;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">+ New Blend</button>';
+  html += '<div class="card" style="margin-bottom:12px"><div class="card-body" style="padding:14px 16px">' +
+    '<div style="font-size:11px;color:var(--muted);line-height:1.7">' +
+    '<strong style="color:var(--text)">How to use:</strong><br>' +
+    '1. Enter how much bac water you added<br>' +
+    '2. Enter each compound\'s name and amount in the vial<br>' +
+    '3. Enter your desired dose for ONE compound \u2014 the others calculate automatically<br>' +
+    '4. Draw to the unit number shown above' +
+    '</div></div></div>';
+  html += '<div class="section-label">Vial details</div>';
+  html += '<div class="card"><div class="card-body">';
+  html += '<div class="field"><label>Water (mL)</label><input type="number" id="blend-water" step="0.1" inputmode="decimal" placeholder="3" oninput="runBlendCalc()"></div>';
+  html += '<div class="field-row"><div class="field" style="flex:1"><label>Vial amount unit</label><select id="blend-vial-unit" onchange="syncBlendUnits(\'vial\');runBlendCalc()"><option>mg</option><option>mcg</option><option>IU</option><option>g</option></select></div></div>';
+  html += '<div id="blend-vial-rows">';
+  BLEND_ROW_IDS.forEach(function(id, idx) { html += renderBlendVialRowHtml(id, idx); });
+  html += '</div>';
+  html += '<button onclick="addBlendRow()" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--accent);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">+ Add compound</button>';
+  html += '</div></div>';
+  html += '<div class="section-label" style="margin-top:20px">Amount desired</div>';
+  html += '<div class="card"><div class="card-body">';
+  html += '<div class="field-row"><div class="field" style="flex:1"><label>Unit</label><select id="blend-dose-unit" onchange="syncBlendUnits(\'dose\');runBlendCalc()"><option>mg</option><option>mcg</option><option>IU</option><option>g</option></select></div></div>';
+  html += '<div id="blend-dose-rows">';
+  BLEND_ROW_IDS.forEach(function(id, idx) { html += renderBlendDoseRowHtml(id, idx); });
+  html += '</div>';
+  html += '</div></div>';
+  html += '<div id="blend-result" style="display:none">';
+  html += '<div class="card"><div class="card-body">';
+  html += '<div id="blend-loaded-badge" style="display:none;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:4px 10px;border-radius:6px;margin-bottom:12px"></div>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+  html += '<div style="font-size:16px;font-weight:700">Draw</div>';
+  html += '<div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent)"><span id="blend-units">\u2014</span> Units</div>';
+  html += '</div>';
+  html += '<div style="font-family:var(--mono);font-size:12px;color:var(--muted)" id="blend-volume-line">\u2014</div>';
+  html += '<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px">Vial contains <span id="blend-doses-total" style="color:var(--green);font-weight:700">\u2014</span> doses</div>';
+  html += '<button onclick="saveBlendCalcAs()" style="width:100%;margin-top:12px;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--accent);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">Save As...</button>';
+  html += '</div></div>';
+  html += '</div>';
+  html += '<div class="section-label" style="margin-top:20px">Saved blends</div>';
+  html += '<div id="saved-blends-list"><div style="font-size:12px;color:var(--muted);padding:8px 0">No saved blends yet.</div></div>';
+  html += '</div>';
+  return html;
+}
+
+const BLEND_DOT_COLORS = ['#f0a83c', '#4a9eff', '#00e5d4', '#ff6ba8', '#a78bfa', '#ff8c66'];
+
+function renderBlendVialRowHtml(id, idx) {
+  const color = BLEND_DOT_COLORS[idx % BLEND_DOT_COLORS.length];
+  return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px" id="blend-vial-row-' + id + '">' +
+    '<div style="width:14px;height:14px;border-radius:50%;background:' + color + ';flex-shrink:0"></div>' +
+    '<input type="text" id="blend-name-' + id + '" placeholder="Compound name" oninput="renderBlendDoseRows();runBlendCalc()" style="flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--sans);font-size:14px">' +
+    '<input type="number" id="blend-amount-' + id + '" step="0.01" inputmode="decimal" placeholder="5" oninput="runBlendCalc()" style="width:80px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:14px">' +
+    '<button onclick="removeBlendRow(' + id + ')" style="background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--red);width:36px;height:36px;font-size:14px;cursor:pointer;flex-shrink:0">\u2715</button>' +
+    '</div>';
+}
+
+function renderBlendDoseRowHtml(id, idx) {
+  const color = BLEND_DOT_COLORS[idx % BLEND_DOT_COLORS.length];
+  const nameInput = document.getElementById('blend-name-' + id);
+  const name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : ('Compound ' + id);
+  return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px" id="blend-dose-row-' + id + '">' +
+    '<div style="width:14px;height:14px;border-radius:50%;background:' + color + ';flex-shrink:0"></div>' +
+    '<div style="flex:1;font-size:14px;color:var(--text)">' + name + '</div>' +
+    '<input type="number" id="blend-desired-' + id + '" step="0.01" inputmode="decimal" placeholder="150" oninput="setBlendLastEdited(' + id + ');runBlendCalc()" style="width:100px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:14px">' +
+    '</div>';
+}
+
+function renderBlendDoseRows() {
+  const container = document.getElementById('blend-dose-rows');
+  if (!container) return;
+  const preserved = {};
+  BLEND_ROW_IDS.forEach(function(id) {
+    const el = document.getElementById('blend-desired-' + id);
+    if (el) preserved[id] = el.value;
+  });
+  container.innerHTML = BLEND_ROW_IDS.map(function(id, idx) { return renderBlendDoseRowHtml(id, idx); }).join('');
+  BLEND_ROW_IDS.forEach(function(id) {
+    const el = document.getElementById('blend-desired-' + id);
+    if (el && preserved[id] !== undefined) el.value = preserved[id];
+  });
+}
+
+function addBlendRow() {
+  const id = BLEND_NEXT_ID++;
+  BLEND_ROW_IDS.push(id);
+  const vialContainer = document.getElementById('blend-vial-rows');
+  if (vialContainer) vialContainer.insertAdjacentHTML('beforeend', renderBlendVialRowHtml(id, BLEND_ROW_IDS.length - 1));
+  renderBlendDoseRows();
+}
+
+function removeBlendRow(id) {
+  if (BLEND_ROW_IDS.length <= 1) return;
+  BLEND_ROW_IDS = BLEND_ROW_IDS.filter(function(x) { return x !== id; });
+  const vRow = document.getElementById('blend-vial-row-' + id);
+  if (vRow) vRow.remove();
+  if (BLEND_LAST_EDITED_ID === id) BLEND_LAST_EDITED_ID = BLEND_ROW_IDS[0];
+  renderBlendDoseRows();
+  runBlendCalc();
+}
+
+function setBlendLastEdited(id) {
+  BLEND_LAST_EDITED_ID = id;
+}
+
+function syncBlendUnits(changed) {
+  const vialSel = document.getElementById('blend-vial-unit');
+  const doseSel = document.getElementById('blend-dose-unit');
+  if (!vialSel || !doseSel) return;
+  if (changed === 'vial' && vialSel.value === 'IU') doseSel.value = 'IU';
+  if (changed === 'dose' && doseSel.value === 'IU') vialSel.value = 'IU';
+}
+
+function runBlendCalc() {
+  const water = parseFloat(document.getElementById('blend-water').value);
+  const vialUnit = document.getElementById('blend-vial-unit') ? document.getElementById('blend-vial-unit').value : 'mg';
+  const doseUnit = document.getElementById('blend-dose-unit') ? document.getElementById('blend-dose-unit').value : 'mg';
+  const resultBox = document.getElementById('blend-result');
+  const isIU = (vialUnit === 'IU' || doseUnit === 'IU');
+
+  const rows = BLEND_ROW_IDS.map(function(id) {
+    return {
+      id: id,
+      amount: parseFloat((document.getElementById('blend-amount-' + id) || {}).value),
+    };
+  });
+
+  const anchorRow = rows.find(function(r) { return r.id === BLEND_LAST_EDITED_ID; });
+  const anchorDoseEl = document.getElementById('blend-desired-' + BLEND_LAST_EDITED_ID);
+  const anchorDoseRaw = anchorDoseEl ? parseFloat(anchorDoseEl.value) : NaN;
+
+  if (!water || water <= 0 || !anchorDoseRaw || anchorDoseRaw <= 0 || !anchorRow || !anchorRow.amount || anchorRow.amount <= 0) {
+    if (resultBox) resultBox.style.display = 'none';
+    return;
+  }
+
+  const anchorAmountMg = isIU ? anchorRow.amount : massToMg(anchorRow.amount, vialUnit);
+  const anchorDoseMg   = isIU ? anchorDoseRaw    : massToMg(anchorDoseRaw, doseUnit);
+  const anchorConc     = anchorAmountMg / water;
+  const drawMl         = anchorDoseMg / anchorConc;
+  const drawUnits      = Math.round(drawMl * 100 * 10) / 10;
+
+  let minDoses = Infinity;
+
+  rows.forEach(function(r) {
+    if (!r.amount || r.amount <= 0) return;
+    const amountMg = isIU ? r.amount : massToMg(r.amount, vialUnit);
+    const conc = amountMg / water;
+    const resultMg = conc * drawMl;
+    const resultDisplay = isIU ? resultMg : mgToUnit(resultMg, doseUnit);
+
+    if (r.id !== BLEND_LAST_EDITED_ID) {
+      const el = document.getElementById('blend-desired-' + r.id);
+      if (el) el.value = resultDisplay.toFixed(isIU ? 0 : 2);
+    }
+
+    const dosesForThis = amountMg / resultMg;
+    if (dosesForThis < minDoses) minDoses = dosesForThis;
+  });
+
+  document.getElementById('blend-units').textContent = drawUnits.toFixed(1);
+  document.getElementById('blend-volume-line').textContent = drawMl.toFixed(3) + ' mL draw';
+  document.getElementById('blend-doses-total').textContent = isFinite(minDoses) ? minDoses.toFixed(2) : '\u2014';
+
+  const badge = document.getElementById('blend-loaded-badge');
+  if (badge) {
+    let matches = false;
+    if (BLEND_LOADED && BLEND_LOADED.water === water && BLEND_LOADED.vialUnit === vialUnit && BLEND_LOADED.doseUnit === doseUnit && BLEND_LOADED.compounds.length === BLEND_ROW_IDS.length) {
+      matches = BLEND_ROW_IDS.every(function(id, idx) {
+        const nameEl = document.getElementById('blend-name-' + id);
+        const amountEl = document.getElementById('blend-amount-' + id);
+        const currentName = nameEl ? nameEl.value.trim() : '';
+        const currentAmount = amountEl ? parseFloat(amountEl.value) : null;
+        return BLEND_LOADED.compounds[idx].name === currentName && BLEND_LOADED.compounds[idx].amount === currentAmount;
+      });
+    }
+    if (matches) {
+      badge.textContent = BLEND_LOADED.name;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  if (resultBox) resultBox.style.display = 'block';
+}
+
+async function saveBlendCalcAs() {
+  const water = parseFloat(document.getElementById('blend-water').value);
+  const vialUnit = document.getElementById('blend-vial-unit') ? document.getElementById('blend-vial-unit').value : 'mg';
+  const doseUnit = document.getElementById('blend-dose-unit') ? document.getElementById('blend-dose-unit').value : 'mg';
+  if (!water || water <= 0) { alert('Enter water amount first'); return; }
+
+  const compounds = BLEND_ROW_IDS.map(function(id) {
+    const nameEl = document.getElementById('blend-name-' + id);
+    const amountEl = document.getElementById('blend-amount-' + id);
+    const result = {
+      name: nameEl && nameEl.value.trim() ? nameEl.value.trim() : ('Compound ' + id),
+      amount: amountEl ? parseFloat(amountEl.value) : null,
+    };
+    if (id === BLEND_LAST_EDITED_ID) {
+      const doseEl = document.getElementById('blend-desired-' + id);
+      const doseVal = doseEl ? parseFloat(doseEl.value) : NaN;
+      if (doseVal && doseVal > 0) result.desired_dose = doseVal;
+    }
+    return result;
+  }).filter(function(c) { return c.amount && c.amount > 0; });
+
+  if (!compounds.length) { alert('Enter at least one compound amount first'); return; }
+
+  let defaultName = '';
+  if (BLEND_EDITING_ID) {
+    try {
+      const existing = await GET('/api/saved-calcs/blends');
+      const match = existing.find(function(b) { return b.id === BLEND_EDITING_ID; });
+      if (match) defaultName = match.name;
+    } catch (err) { /* fall through with blank default */ }
+  }
+
+  const name = prompt(BLEND_EDITING_ID ? 'Rename this blend:' : 'Name this blend:', defaultName);
+  if (!name || !name.trim()) return;
+
+  const payload = {
+    name: name.trim(),
+    water: water,
+    vial_unit: vialUnit,
+    dose_unit: doseUnit,
+    compounds: compounds,
+  };
+
+  try {
+    if (BLEND_EDITING_ID) {
+      await PUT('/api/saved-calcs/blends/' + BLEND_EDITING_ID, payload);
+    } else {
+      await POST('/api/saved-calcs/blends', payload);
+    }
+    loadSavedBlends();
+  } catch (err) { alert(err.message); }
+}
+
+async function loadSavedBlends() {
+  const el = document.getElementById('saved-blends-list');
+  if (!el) return;
+  try {
+    const blends = await GET('/api/saved-calcs/blends');
+    if (!blends.length) {
+      el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">No saved blends yet.</div>';
+      return;
+    }
+    let html = '';
+    blends.forEach(function(blend) {
+      const names = blend.compounds.map(function(c) { return c.name; }).join(' + ');
+      html += '<div class="card" style="margin-bottom:8px"><div class="card-body" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center">';
+      html += '<div onclick="loadSavedBlend(' + blend.id + ')" style="flex:1;cursor:pointer">';
+      html += '<div style="font-size:14px;font-weight:600">' + blend.name + '</div>';
+      html += '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px">' + names + '</div>';
+      html += '</div>';
+      html += '<button onclick="deleteSavedBlend(' + blend.id + ')" style="background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--red);width:28px;height:28px;font-size:14px;cursor:pointer;flex-shrink:0;margin-left:8px">\u2715</button>';
+      html += '</div></div>';
+    });
+    el.innerHTML = html;
+  } catch (err) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--red);padding:8px 0">' + err.message + '</div>';
+  }
+}
+
+async function loadSavedBlend(blendId) {
+  try {
+    const blends = await GET('/api/saved-calcs/blends');
+    const blend = blends.find(function(b) { return b.id === blendId; });
+    if (!blend) return;
+
+    BLEND_EDITING_ID = blendId;
+    BLEND_LOADED = {
+      name: blend.name,
+      water: blend.water,
+      vialUnit: blend.vial_unit,
+      doseUnit: blend.dose_unit,
+      compounds: blend.compounds.map(function(c) { return { name: c.name, amount: c.amount }; }),
+    };
+    BLEND_ROW_IDS = blend.compounds.map(function(_, i) { return i + 1; });
+    BLEND_NEXT_ID = BLEND_ROW_IDS.length + 1;
+
+    const anchorIdx = blend.compounds.findIndex(function(c) { return c.desired_dose; });
+    BLEND_LAST_EDITED_ID = anchorIdx >= 0 ? BLEND_ROW_IDS[anchorIdx] : BLEND_ROW_IDS[0];
+
+    const vialContainer = document.getElementById('blend-vial-rows');
+    if (vialContainer) {
+      vialContainer.innerHTML = BLEND_ROW_IDS.map(function(id, idx) { return renderBlendVialRowHtml(id, idx); }).join('');
+    }
+    BLEND_ROW_IDS.forEach(function(id, idx) {
+      const nameEl = document.getElementById('blend-name-' + id);
+      const amountEl = document.getElementById('blend-amount-' + id);
+      if (nameEl) nameEl.value = blend.compounds[idx].name;
+      if (amountEl) amountEl.value = blend.compounds[idx].amount;
+    });
+
+    const waterEl = document.getElementById('blend-water');
+    const vialUnitEl = document.getElementById('blend-vial-unit');
+    const doseUnitEl = document.getElementById('blend-dose-unit');
+    if (waterEl) waterEl.value = blend.water;
+    if (vialUnitEl) vialUnitEl.value = blend.vial_unit;
+    if (doseUnitEl) doseUnitEl.value = blend.dose_unit;
+
+    renderBlendDoseRows();
+
+    if (anchorIdx >= 0) {
+      const doseEl = document.getElementById('blend-desired-' + BLEND_ROW_IDS[anchorIdx]);
+      if (doseEl) doseEl.value = blend.compounds[anchorIdx].desired_dose;
+      runBlendCalc();
+    } else {
+      const resultBox = document.getElementById('blend-result');
+      if (resultBox) resultBox.style.display = 'none';
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) { alert(err.message); }
+}
+
+async function deleteSavedBlend(blendId) {
+  if (!confirm('Delete this saved blend?')) return;
+  try {
+    await DEL('/api/saved-calcs/blends/' + blendId);
+    loadSavedBlends();
+  } catch (err) { alert(err.message); }
+}
+
+function startNewBlend() {
+  const panel = document.getElementById('calc-blend');
+  if (panel) panel.innerHTML = renderBlendPanel();
+  loadSavedBlends();
+}
+
+function switchCalcTab(name, btn) {
+  document.querySelectorAll('#page-calc .inner-tab').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('#page-calc .inner-panel').forEach(function(p) { p.classList.remove('active'); });
+  btn.classList.add('active');
+  const panel = document.getElementById('calc-' + name);
+  if (panel) panel.classList.add('active');
+  if (name === 'blend') loadSavedBlends();
 }
 
 function syncCalcUnits(changed) {
@@ -2373,6 +2753,18 @@ function runCalc() {
   document.getElementById('calc-ml').textContent    = ml.toFixed(3) + ' mL';
   document.getElementById('calc-units').textContent = units.toFixed(1);
   document.getElementById('calc-doses').textContent = dosesInVial;
+
+  const badge = document.getElementById('calc-loaded-badge');
+  if (badge) {
+    const matches = CALC_LOADED && CALC_LOADED.vial === vial && CALC_LOADED.water === water && CALC_LOADED.dose === dose && CALC_LOADED.vialUnit === vialUnit && CALC_LOADED.doseUnit === doseUnit;
+    if (matches) {
+      badge.textContent = CALC_LOADED.name;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
   res.style.display = 'block';
 }
 
@@ -2406,10 +2798,12 @@ function loadSavedCalc(calcId) {
   GET('/api/saved-calcs/').then(function(calcs) {
     const calc = calcs.find(function(c) { return c.id === calcId; });
     if (!calc) return;
-    document.getElementById('calc-vial').value  = calc.vial_size;
-    document.getElementById('calc-unit').value  = calc.unit;
+    document.getElementById('calc-vial').value = calc.vial_size;
+    document.getElementById('calc-vial-unit').value = calc.unit;
     document.getElementById('calc-water').value = calc.water;
-    document.getElementById('calc-dose').value  = calc.dose;
+    document.getElementById('calc-dose').value = calc.dose;
+    document.getElementById('calc-dose-unit').value = calc.dose_unit || calc.unit;
+    CALC_LOADED = { name: calc.name, vial: calc.vial_size, water: calc.water, dose: calc.dose, vialUnit: calc.unit, doseUnit: calc.dose_unit || calc.unit };
     updateCalcLabels();
     runCalc();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2424,16 +2818,20 @@ async function deleteSavedCalc(calcId) {
   } catch (err) { alert(err.message); }
 }
 
+let CALC_LOADED = null;
+
 async function saveCalcAs() {
   const vial  = parseFloat(document.getElementById('calc-vial').value);
   const water = parseFloat(document.getElementById('calc-water').value);
   const dose  = parseFloat(document.getElementById('calc-dose').value);
-  const unit  = document.getElementById('calc-unit') ? document.getElementById('calc-unit').value : 'mg';
+  const vialUnit = document.getElementById('calc-vial-unit') ? document.getElementById('calc-vial-unit').value : 'mg';
+  const doseUnit = document.getElementById('calc-dose-unit') ? document.getElementById('calc-dose-unit').value : 'mg';
   if (!vial || !water || !dose) { alert('Enter vial size, water, and dose first'); return; }
-  const name = prompt('Name this calculation:');
+  const defaultName = (CALC_LOADED && CALC_LOADED.vial === vial && CALC_LOADED.water === water && CALC_LOADED.dose === dose && CALC_LOADED.vialUnit === vialUnit && CALC_LOADED.doseUnit === doseUnit) ? CALC_LOADED.name : '';
+  const name = prompt('Name this calculation:', defaultName);
   if (!name || !name.trim()) return;
   try {
-    await POST('/api/saved-calcs/', { name: name.trim(), vial_size: vial, unit: unit, water: water, dose: dose });
+    await POST('/api/saved-calcs/', { name: name.trim(), vial_size: vial, unit: vialUnit, dose_unit: doseUnit, water: water, dose: dose });
     loadSavedCalcs();
   } catch (err) { alert(err.message); }
 }

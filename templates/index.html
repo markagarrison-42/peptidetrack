@@ -2262,7 +2262,7 @@
     <input type="hidden" id="ecm-item-id">
     <div class="dose-modal-input-wrap" style="margin-bottom:16px">
       <input type="number" id="ecm-dose" inputmode="decimal" step="0.01" placeholder="0">
-      <span class="dose-modal-unit" id="ecm-unit">mg</span>
+      <select class="dose-modal-unit" id="ecm-unit" onchange="updateEcmDoseDisplay()"><option>mg</option><option>mcg</option><option>IU</option><option>mL</option><option>g</option></select>
     </div>
     <div class="field" style="margin-bottom:12px">
       <label>Frequency</label>
